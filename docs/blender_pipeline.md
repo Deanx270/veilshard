@@ -6,7 +6,7 @@ See [visual direction](visual_direction.md) for the current art brief. Blender i
 
 Use one fixed elevated three-quarter camera for the environment and character renders. Begin around 35 degrees elevation and 45 degrees azimuth with an orthographic lens, then agree on a Stage 1 composition. Export 16:9 backgrounds at 1920×1080 or 3200×1800. All environment layers must use exactly the same camera, dimensions, color management, and pixel alignment. Do not crop transparent foreground canvases. The loader scales full environment images to 1600×900 once.
 
-Reserve y=660–900 for cards and the upper 180 pixels for health and intent UI. Stage 1 defaults put the player feet at (470,610) and the enemy at (1100,500). These are logical screen coordinates, not Blender world coordinates. The player appears closer, with the enemy farther across the clearing. Use flat shading and matching key/fill lights when separately rendering characters. Camera orientation is baked into the images; `camera.composition` is descriptive metadata only.
+Render the complete 1600×900 battlefield with no reserved footer or vertical crop. Cards float near the bottom center; player status sits bottom-left, End Turn bottom-right, and enemy status above its sprite. Keep faces and focal action above the card fan when composing assets. Stage 1 defaults put the player feet at (470,610) and the enemy at (1100,500). These are logical screen coordinates, not Blender world coordinates. The player appears closer, with the enemy farther across the clearing. Use flat shading and matching key/fill lights when separately rendering characters. Camera orientation is baked into the images; `camera.composition` is descriptive metadata only.
 
 ## Background and foreground
 

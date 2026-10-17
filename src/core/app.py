@@ -5,6 +5,8 @@ from src.rendering.assets import Assets
 from src.rendering.battlefield import Battlefield
 from src.rendering.effects import Effects
 from src.ui.widgets import UI, INK, MUTED
+from src.ui.card_hand import CardHand
+from src.ui.battle_hud import BattleHUD
 
 class App:
     def __init__(self):
@@ -15,6 +17,9 @@ class App:
         pygame.display.set_caption(self.campaign.story["title"])
         self.assets=Assets()
         self.ui=UI()
+        self.hand=CardHand(self.ui)
+        self.hud=BattleHUD(self.ui)
+        self.end_pressed=0.0
         self.effects=Effects()
         self.clock=pygame.time.Clock()
         self.running=True
@@ -25,9 +30,6 @@ class App:
         self.last_scene="menu"
         self.loaded_stage=None
         self.buttons={}
-        self.card_rects=[]
-        self.played_card=None
-        self.played_age=0.0
         self.load_stage()
 
     def load_stage(self):
@@ -41,9 +43,6 @@ class App:
         if self.campaign.scene!=self.last_scene:
             self.last_scene=self.campaign.scene
             self.fade=0.28
-            self.card_rects=[]
-            self.played_card=None
-            self.played_age=0.0
         self.load_stage()
 
     def action(self,name):
@@ -53,13 +52,17 @@ class App:
             c.enter_battle()
             self.effects=Effects()
             self.loaded_stage=None
+            self.hand=CardHand(self.ui)
         elif name=="next": c.advance()
         elif name=="retry": c.retry()
         elif name=="menu":
             c.scene="menu"; self.paused=False
         elif name=="quit": self.running=False
         elif name=="resume": self.paused=False
+        elif name=="pause": self.paused=True
         elif name=="end" and c.battle and not self.lock:
+            self.end_pressed=0.16
+            self.hand=CardHand(self.ui)
             intent=c.battle.intent.kind
             effects=c.battle.end_turn()
             self.effects.add(effects,c.stage)
@@ -77,28 +80,29 @@ class App:
             mouse=logical_mouse(event.pos,self.window.get_size())
             for name,rect in self.buttons.items():
                 if rect.collidepoint(mouse):
-                    if not self.lock or self.paused: self.action(name)
+                    if not self.lock or self.paused or name=="pause": self.action(name)
                     return
             if self.campaign.scene=="battle" and not self.paused and not self.lock:
-                for i,rect in enumerate(self.card_rects):
-                    if rect.collidepoint(mouse):
-                        card=self.campaign.battle.deck.hand[i]
-                        effects=self.campaign.battle.play(i)
-                        if effects:
-                            self.played_card=(card,rect.copy())
-                            self.played_age=0.0
-                            self.effects.add(effects,self.campaign.stage)
-                            self.battlefield.feedback(effects,"player", "defend" if card.category=="block" else card.category)
-                            self.lock=0.35
-                        return
+                i=self.hand.hit(mouse)
+                if i is not None:
+                    card=self.campaign.battle.deck.hand[i]
+                    effects=self.campaign.battle.play(i)
+                    if effects:
+                        self.hand.remove(i)
+                        self.effects.add(effects,self.campaign.stage)
+                        self.battlefield.feedback(effects,"player", "defend" if card.category=="block" else card.category)
+                        self.lock=0.35
 
     def update(self,dt):
         if not self.paused:
             self.time+=dt
             self.effects.update(dt)
             self.battlefield.update(dt)
-            self.played_age+=dt
-            if self.played_age>=0.35: self.played_card=None
+            self.end_pressed=max(0,self.end_pressed-dt)
+            if self.campaign.scene=="battle":
+                self.hand.sync(self.campaign.battle.deck.hand)
+                mouse=logical_mouse(pygame.mouse.get_pos(),self.window.get_size())
+                self.hand.update(dt,mouse,not self.lock)
             self.lock=max(0,self.lock-dt)
             if not self.lock: self.campaign.resolve()
         self.fade=max(0,self.fade-dt)
@@ -112,7 +116,7 @@ class App:
     def draw(self):
         c=self.campaign; s=self.canvas; ui=self.ui
         mouse=logical_mouse(pygame.mouse.get_pos(),self.window.get_size())
-        self.buttons={}; self.card_rects=[]
+        self.buttons={}
         if c.scene=="battle":
             self.draw_battle(mouse)
         else:
@@ -145,7 +149,7 @@ class App:
             ui.text(s,"VEILSHARD  /  PROTOTYPE 01",(40,850),17,MUTED)
         if self.paused:
             shade=pygame.Surface(SIZE,pygame.SRCALPHA); shade.fill((5,9,21,210)); s.blit(shade,(0,0))
-            self.buttons={}; self.card_rects=[]
+            self.buttons={}
             ui.panel(s,pygame.Rect(550,275,500,350))
             ui.text(s,"Paused",(800,335),46,INK,True)
             self.button("resume","Resume",(650,410,300,60),mouse)
@@ -158,38 +162,16 @@ class App:
         pygame.display.flip()
 
     def draw_battle(self,mouse):
-        c=self.campaign; b=c.battle; s=self.canvas; ui=self.ui; accent=c.stage["accent"]
-        self.battlefield.draw(s,self.time,self.effects,ui.font(34))
-        ui.text(s,f"{c.index+1:02}  /  {c.stage['name'].upper()}",(42,28),23,accent)
-        ui.text(s,f"TURN {b.turn:02}     •     ESC TO PAUSE",(1190,30),18,MUTED)
-        ui.health(s,"The Duelist",b.player,pygame.Rect(60,85,420,82),(144,176,245))
-        ui.health(s,c.stage["enemy"]["name"],b.enemy,pygame.Rect(1120,85,420,82),accent)
-        ui.panel(s,pygame.Rect(545,105,510,72))
-        ui.text(s,"ENEMY INTENT"+("  /  FRACTURED" if b.plan.enraged else ""),(565,115),14,accent)
-        ui.text(s,b.intent.label,(565,137),23)
-        # Opaque bottom UI guarantees readability above any foreground export.
-        pygame.draw.rect(s,(12,18,33),(0,660,1600,240))
-        pygame.draw.line(s,(57,68,97),(30,660),(1570,660),1)
-        ui.text(s,"ENERGY",(65,714),18,MUTED)
-        ui.text(s,f"{b.energy} / 2",(60,744),50,(160,187,255))
-        ui.text(s,f"Draw {len(b.deck.draw_pile)}  /  Discard {len(b.deck.discard)}",(60,833),17,MUTED)
-        width=250; gap=20; count=len(b.deck.hand)
-        start=(1600-(count*width+max(0,count-1)*gap))/2
-        for i,card in enumerate(b.deck.hand):
-            rect=pygame.Rect(start+i*(width+gap),678,width,215)
-            hover=rect.collidepoint(mouse) and not self.paused and not self.lock
-            if hover: rect.y-=12
-            self.card_rects.append(rect)
-            ui.card(s,card,rect,hover,card.cost<=b.energy)
-        if self.played_card:
-            card,origin=self.played_card
-            ghost=pygame.Surface((250,215),pygame.SRCALPHA)
-            ui.card(ghost,card,pygame.Rect(0,0,250,215),True,True)
-            ghost.set_alpha(int(255*(1-self.played_age/0.35)))
-            s.blit(ghost,(origin.x,origin.y-self.played_age*240))
-        if not b.deck.hand: ui.text(s,"No cards left. End your turn to draw three.",(800,780),25,MUTED,True)
-        self.button("end","End turn",(1300,752,240,64),mouse,not self.lock and b.status=="active")
-        ui.text(s,"Play cards • anticipate • endure",(1270,837),16,MUTED)
+        c=self.campaign; b=c.battle
+        self.battlefield.draw(self.canvas,self.time,self.effects,self.ui.font(34))
+        enabled=not self.lock and b.status=="active" and not self.paused
+        self.hud.draw(self.canvas,c,mouse,enabled,self.end_pressed>0)
+        self.buttons["pause"]=self.hud.pause
+        if enabled: self.buttons["end"]=self.hud.end
+        self.hand.sync(b.deck.hand)
+        self.hand.draw(self.canvas,b.energy)
+        if not b.deck.hand:
+            self.ui.text(self.canvas,"End your turn to draw three cards.",(800,804),21,INK,True)
 
     def run(self,frames=None):
         count=0

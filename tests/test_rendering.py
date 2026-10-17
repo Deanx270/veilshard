@@ -23,7 +23,7 @@ def test_scene_rendering_and_input(tmp_path):
         app.draw(); click(app,(800,615)); assert app.campaign.scene=="battle"
         app.update(0.3); app.draw()
         b=app.campaign.battle; old=len(b.deck.hand)
-        click(app,app.card_rects[0].center)
+        click(app,(app.hand.views[0].pose.x,app.hand.views[0].pose.y))
         assert len(b.deck.hand)==old-1
         app.event(pygame.event.Event(pygame.KEYDOWN,key=pygame.K_ESCAPE))
         lock=app.lock; app.update(1); app.draw()
@@ -120,8 +120,8 @@ def test_card_feedback_survives_update():
     app=App()
     try:
         app.action("start"); app.action("battle"); app.update(0.3); app.draw()
-        click(app,app.card_rects[0].center)
+        click(app,(app.hand.views[0].pose.x,app.hand.views[0].pose.y))
         app.update(0.1)
-        assert app.played_card is not None and app.played_age>0
-        app.update(0.3); assert app.played_card is None
+        assert app.hand.ghost is not None and app.hand.ghost_age>0
+        app.update(0.3); assert app.hand.ghost is None
     finally: pygame.quit()

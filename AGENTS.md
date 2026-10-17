@@ -37,3 +37,7 @@ Likely next steps are final illustrations, audio, saving progress, status effect
 ## Current visual architecture
 
 The low-poly 2.5D direction in `docs/visual_direction.md` supersedes the art direction of the original TASK.md. Preserve completed combat. `Battlefield` composites backgrounds, ordered `CharacterSprite` actors/shadows, foregrounds, and effects before `Camera` applies impact zoom/shake. UI draws afterward. Animation frames, alpha-preserving hit variants, and shadows are cached; update timers only while unpaused. Actor clip events are presentation-only and never change combat outcomes. Configure positions, normalized ground anchors, scale, order, shadow, and clips through stages.json. Prioritize Stage 1 composition and final exports before producing finished art for later stages. No runtime Blender or real-time 3D dependencies.
+
+## Floating HUD
+
+See `docs/battle_ui.md`. Keep card geometry in card_layout.py, presentation/easing/input in card_hand.py, face art in card_art.py, and status/buttons in battle_hud.py. Never reserve a footer or shrink the world for HUD. Preserve exact duplicate-card occurrence removal and topmost transformed hit testing. Keep the fan shallow (three cards: about 7 degrees and 14 pixels rise).

@@ -25,7 +25,7 @@ On macOS/Linux, use `.venv/bin/python` in place of `.\.venv\Scripts\python`. No 
 
 ## Implemented
 
-A 12-card deck (5 Attack, 2 Heavy Attack, 3 Shield, 2 Heal), shuffled draw/discard cycle, visible enemy intentions, five enemy patterns, six navigation scenes, health/Block/energy UI, card hover and affordability feedback, floating damage/heal/Block numbers, alpha-preserving sprite hit flashes, camera shake and impact zoom, scene fades, and pause-safe animation timing.
+A 12-card deck (5 Attack, 2 Heavy Attack, 3 Shield, 2 Heal), shuffled draw/discard cycle, visible enemy intentions, five enemy patterns, six navigation scenes, health/Block/energy UI, a shallow animated portrait-card fan, transformed hover/click detection, and affordability feedback, floating damage/heal/Block numbers, alpha-preserving sprite hit flashes, camera shake and impact zoom, scene fades, and pause-safe animation timing.
 
 Pure Python combat is separate from rendering. JSON defines cards, stage layouts, enemies, story, and the displayed title. PNG backgrounds, transparent foregrounds, parallax layers, and optional frame sequences are cached at load time. Independent transparent character sprites support ground anchors, scale, draw order, shadows, and optional frame animation clips. Missing art falls back to procedural environments and faceted character stand-ins. Stage 1 has a three-quarter clearing composition; final Blender art remains pending.
 
@@ -63,3 +63,5 @@ TASK.md                 Original project brief
 Art is intentionally temporary: faceted stand-ins and procedural scenery, no final low-poly Blender renders. No sound, save system, rewards, deck upgrades, dialogue trees, or skeletal animation. Played cards rise and fade during a short input lock. Enemy turns resolve atomically, followed by a short nonblocking presentation delay. Balance is provisional, and playthrough tests do not guarantee every random draw is winnable. PNG sequences preload all frames and should stay small. The world composite is scaled during camera effects and the logical canvas for window presentation; source assets are cached at load time.
 
 See [visual direction](docs/visual_direction.md), [game rules](docs/game_design.md) and the [Blender pipeline](docs/blender_pipeline.md) before replacing assets.
+
+The battle HUD floats above the full viewport: compact player status bottom-left, enemy health/intent near the sprite, and a circular End Turn bottom-right. Three cards use a restrained 7-degree fan with a 14-pixel arc. See [battle UI](docs/battle_ui.md) for tuning and input behavior.
