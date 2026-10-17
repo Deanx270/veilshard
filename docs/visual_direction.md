@@ -1,4 +1,4 @@
-# Visual direction â€” anime-inspired low-poly 2.5D
+# Visual direction — anime-inspired low-poly 2.5D
 
 This update supersedes the illustration-oriented visual brief in the original `TASK.md`. Preserve that file as the original project record. Gameplay remains Python/Pygame CE with a fully 2D renderer, and the five-stage campaign remains intact.
 
@@ -8,7 +8,7 @@ Use a fixed, elevated three-quarter Blender camera, looking diagonally across th
 
 Stage 1 places the Duelist closer to the front-left and the Flame Warden farther back-right. Transparent character renders stand at explicit ground anchors. Flat-shaded facets, restrained silhouettes, stylized anime proportions, warm ember light, and cool shadow planes establish the direction. Avoid detailed painted illustration and pixel-art treatments.
 
-The Stage 1 procedural diamond clearing, faceted trees, crystal plinth, and faceted character stand-ins are composition studies, not final Blender renders. Stages 2â€“5 retain provisional environments. Polish and approve the Stage 1 camera, lighting, character scale, floor contact, and UI clearance before commissioning the remaining final art.
+The Stage 1 procedural diamond clearing, faceted trees, crystal plinth, and faceted character stand-ins are composition studies, not final Blender renders. Stages 2–5 retain provisional environments. Polish and approve the Stage 1 camera, lighting, character scale, floor contact, and UI clearance before commissioning the remaining final art.
 
 ## Runtime layers and feedback
 
@@ -23,4 +23,4 @@ Frame clips, shadows, and hit-tinted variants are prepared at load time. Delta-t
 
 ## Scope
 
-No gameplay rewrite, Blender installation, runtime 3D engine, skeleton, or model loading. Artists deliver PNGs and JSON configuration. Ground-plane perspective and lighting must match across exports. Future art approval should compare a static frame and attack/hit clips at the actual 1600Ã—900 logical layout.
+No gameplay rewrite, Blender installation, runtime 3D engine, skeleton, or model loading. Artists deliver PNGs and JSON configuration. Ground-plane perspective and lighting must match across exports. Future art approval should compare a static frame and attack/hit clips at the actual 1600×900 logical layout.

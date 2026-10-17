@@ -60,7 +60,7 @@ TASK.md                 Original project brief
 
 ## Current limitations
 
-Art is intentionally temporary: faceted stand-ins and procedural scenery, no final low-poly Blender renders. No sound, save system, rewards, deck upgrades, dialogue trees, or skeletal animation. Played cards rise and fade during a short input lock. Enemy turns resolve atomically, followed by a short nonblocking presentation delay. Balance is provisional, and playthrough tests do not guarantee every random draw is winnable. PNG sequences preload all frames and should stay small. The world composite is scaled during camera effects and the logical canvas for window presentation; source assets are cached at load time.
+Art is intentionally temporary: faceted stand-ins and procedural scenery, no final low-poly Blender renders. No sound, save system, rewards, deck upgrades, dialogue trees, or skeletal animation. Played cards move, shrink, and dissolve while the hand reorganizes. Player and enemy actions resolve once at timed impact after anticipation, followed by recovery. Heavy strikes use stronger recoil, particles, and shake. HP bars interpolate after the real HP change. Balance is provisional, and playthrough tests do not guarantee every random draw is winnable. PNG sequences preload all frames and should stay small. The world composite is scaled during camera effects and the logical canvas for window presentation; source assets are cached at load time.
 
 See [visual direction](docs/visual_direction.md), [game rules](docs/game_design.md) and the [Blender pipeline](docs/blender_pipeline.md) before replacing assets.
 

@@ -89,5 +89,10 @@ class CardHand:
             surface.blit(face,rect)
         if self.ghost:
             face=self.transformed(self.ghost,99,True)[0].copy()
-            face.set_alpha(round(255*(1-self.ghost_age/0.35)))
-            surface.blit(face,face.get_rect(center=(round(self.ghost.pose.x),round(self.ghost.pose.y-self.ghost_age*240))))
+            progress=min(1,self.ghost_age/0.35)
+            ease=1-(1-progress)**3
+            face.set_alpha(round(255*(1-progress**2)))
+            size=(max(1,round(face.get_width()*(1-0.25*ease))),max(1,round(face.get_height()*(1-0.25*ease))))
+            face=pygame.transform.smoothscale(face,size)
+            x=self.ghost.pose.x+(800-self.ghost.pose.x)*ease*0.35
+            surface.blit(face,face.get_rect(center=(round(x),round(self.ghost.pose.y-105*ease))))

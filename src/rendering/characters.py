@@ -96,8 +96,9 @@ class CharacterSprite:
         index = index % len(frames) if loop else min(index, len(frames)-1)
         return self.flashes[self.state][index] if self.hit_time > 0 else frames[index]
 
-    def draw(self, surface):
-        pos = self.spec["position"]
+    def draw(self, surface, displacement=(0,0)):
+
+        pos = [self.spec["position"][i]+displacement[i] for i in range(2)]
         anchor = self.spec.get("anchor", [0.5, 1.0])
         shadow = self.spec.get("shadow", {})
         offset = shadow.get("offset", [0, 0])

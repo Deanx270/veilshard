@@ -6,6 +6,7 @@ from src.rendering.battlefield import Battlefield
 from src.rendering.effects import Effects
 from src.ui.widgets import UI, INK, MUTED
 from src.ui.card_hand import CardHand
+from src.rendering.action_timeline import ActionTimeline
 from src.ui.battle_hud import BattleHUD
 
 class App:
@@ -20,6 +21,8 @@ class App:
         self.hand=CardHand(self.ui)
         self.hud=BattleHUD(self.ui)
         self.end_pressed=0.0
+        self.timeline=ActionTimeline()
+        self.pending_card=None
         self.effects=Effects()
         self.clock=pygame.time.Clock()
         self.running=True
@@ -51,23 +54,24 @@ class App:
         elif name=="battle":
             c.enter_battle()
             self.effects=Effects()
+            self.timeline.cancel()
+            self.pending_card=None
+            self.lock=0
+            self.hud.reset(c.battle)
             self.loaded_stage=None
             self.hand=CardHand(self.ui)
         elif name=="next": c.advance()
         elif name=="retry": c.retry()
         elif name=="menu":
             c.scene="menu"; self.paused=False
+            self.timeline.cancel(); self.pending_card=None; self.lock=0
         elif name=="quit": self.running=False
         elif name=="resume": self.paused=False
         elif name=="pause": self.paused=True
-        elif name=="end" and c.battle and not self.lock:
+        elif name=="end" and c.scene=="battle" and c.battle.status=="active" and not self.lock and not self.paused:
             self.end_pressed=0.16
-            self.hand=CardHand(self.ui)
-            intent=c.battle.intent.kind
-            effects=c.battle.end_turn()
-            self.effects.add(effects,c.stage)
-            self.battlefield.feedback(effects,"opponent", "attack" if intent=="special" else intent)
-            self.lock=0.65
+            kind=c.battle.intent.kind
+            self.begin_action(kind,"opponent",c.battle.end_turn)
         self.change_feedback()
 
     def event(self,event):
@@ -86,24 +90,41 @@ class App:
                 i=self.hand.hit(mouse)
                 if i is not None:
                     card=self.campaign.battle.deck.hand[i]
-                    effects=self.campaign.battle.play(i)
-                    if effects:
+                    if card.cost<=self.campaign.battle.energy and self.campaign.battle.status=="active":
+                        self.pending_card=i
                         self.hand.remove(i)
-                        self.effects.add(effects,self.campaign.stage)
-                        self.battlefield.feedback(effects,"player", "defend" if card.category=="block" else card.category)
-                        self.lock=0.35
+                        self.begin_action(card.id if card.category=="attack" else card.category,"player",lambda: self.campaign.battle.play(i))
+
+    def begin_action(self,kind,source,resolve):
+        def impact():
+            effects=resolve()
+            self.pending_card=None
+            self.effects.add(effects,self.campaign.stage,kind)
+            self.battlefield.feedback(effects,source,kind)
+        if self.timeline.start(kind,source,impact):
+            self.lock=self.timeline.remaining
+            clip="attack" if kind in ("heavy","special") else "defend" if kind=="block" else kind
+            self.battlefield.actors[source].trigger(clip)
+
+    def visible_hand(self):
+        cards=list(self.campaign.battle.deck.hand)
+        if self.pending_card is not None: cards.pop(self.pending_card)
+        return cards
 
     def update(self,dt):
         if not self.paused:
             self.time+=dt
             self.effects.update(dt)
             self.battlefield.update(dt)
+            self.timeline.update(dt)
+            self.lock=self.timeline.remaining
+            self.battlefield.motion=self.timeline
+            if self.campaign.scene=="battle": self.hud.update(dt,self.campaign.battle)
             self.end_pressed=max(0,self.end_pressed-dt)
             if self.campaign.scene=="battle":
-                self.hand.sync(self.campaign.battle.deck.hand)
+                self.hand.sync(self.visible_hand())
                 mouse=logical_mouse(pygame.mouse.get_pos(),self.window.get_size())
                 self.hand.update(dt,mouse,not self.lock)
-            self.lock=max(0,self.lock-dt)
             if not self.lock: self.campaign.resolve()
         self.fade=max(0,self.fade-dt)
         self.change_feedback()
@@ -168,7 +189,7 @@ class App:
         self.hud.draw(self.canvas,c,mouse,enabled,self.end_pressed>0)
         self.buttons["pause"]=self.hud.pause
         if enabled: self.buttons["end"]=self.hud.end
-        self.hand.sync(b.deck.hand)
+        self.hand.sync(self.visible_hand())
         self.hand.draw(self.canvas,b.energy)
         if not b.deck.hand:
             self.ui.text(self.canvas,"End your turn to draw three cards.",(800,804),21,INK,True)

@@ -1,5 +1,6 @@
 """Compact floating overlays, with no reserved battlefield region."""
 import pygame
+import math
 from src.ui.widgets import INK, MUTED
 
 GOLD=(204,182,139)
@@ -30,6 +31,7 @@ def bar(surface,rect,value,maximum,color):
 class BattleHUD:
     def __init__(self,ui):
         self.ui=ui
+        self.display_hp={}
         self.end=CircleTarget((1450,786),70)
         self.pause=CircleTarget((1510,52),28)
         # Small original portrait, independent of full-height battle sprites.
@@ -40,6 +42,16 @@ class BattleHUD:
         pygame.draw.polygon(p,(88,106,154),[(56,71),(22,99),(56,122),(90,99)])
         pygame.draw.polygon(p,(226,204,199),[(32,44),(58,30),(81,46),(73,77),(55,91),(36,73)])
         pygame.draw.polygon(p,(206,215,237),[(23,66),(26,31),(56,15),(86,37),(89,73),(72,50),(60,42),(45,63),(43,43)])
+
+    def reset(self,battle):
+        self.display_hp={"player":float(battle.player.hp),"enemy":float(battle.enemy.hp)}
+
+    def update(self,dt,battle):
+        for key in ("player","enemy"):
+            target=getattr(battle,key).hp
+            previous=self.display_hp.get(key,float(target))
+            self.display_hp[key]=previous+(target-previous)*(1-math.exp(-12*dt))
+            if abs(self.display_hp[key]-target)<0.02: self.display_hp[key]=float(target)
 
     def draw(self,s,c,mouse,enabled=True,pressed=False):
         ui=self.ui; b=c.battle
@@ -58,7 +70,7 @@ class BattleHUD:
         s.blit(self.portrait,(28,723))
         ui.text(s,"THE DUELIST",(155,728),17,GOLD)
         ui.text(s,f"{b.player.hp} / {b.player.max_hp} HP",(155,755),23)
-        bar(s,(156,791,205,13),b.player.hp,b.player.max_hp,(125,208,160))
+        bar(s,(156,791,205,13),self.display_hp.get("player",b.player.hp),b.player.max_hp,(125,208,160))
         for i in range(2):
             x=165+i*26
             color=(173,204,255) if i<b.energy else (68,74,91)
@@ -72,7 +84,7 @@ class BattleHUD:
         y=max(122,min(490,spec['position'][1]-height*spec.get('anchor',[0.5,1])[1]-100))
         glass(s,(x-14,y-8,320,101),145)
         ui.text(s,c.stage['enemy']['name'],(x,y),22,(244,230,210))
-        bar(s,(x+4,y+33,285,10),b.enemy.hp,b.enemy.max_hp,(227,113,105))
+        bar(s,(x+4,y+33,285,10),self.display_hp.get("enemy",b.enemy.hp),b.enemy.max_hp,(227,113,105))
         ui.text(s,f"{b.enemy.hp} / {b.enemy.max_hp}"+(f"   ◇ {b.enemy.block} Block" if b.enemy.block else ""),(x,y+49),17)
         ui.text(s,b.intent.label+("  !" if b.plan.enraged else ""),(x,y+74),17,(244,187,141))
         hover=self.end.collidepoint(mouse) and enabled

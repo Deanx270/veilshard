@@ -68,10 +68,12 @@ def test_floating_hud_no_footer_and_resized_card_click():
         pos=(round(area.x+pose.x*area.width/1600),round(area.y+pose.y*area.height/900))
         count=len(app.campaign.battle.deck.hand)
         app.event(pygame.event.Event(pygame.MOUSEBUTTONDOWN,button=1,pos=pos))
-        assert len(app.campaign.battle.deck.hand)==count-1
+        assert len(app.hand.views)==count-1
         app.update(.1)
         assert app.hand.ghost is not None
         # Unaffordable cards do not mutate hand or create activation feedback.
+        app.update(1)
+        assert len(app.campaign.battle.deck.hand)==count-1
         app.lock=0; app.campaign.battle.energy=0; app.hand.ghost=None; app.draw()
         pose=app.hand.views[0].pose
         pos=(round(area.x+pose.x*area.width/1600),round(area.y+pose.y*area.height/900))

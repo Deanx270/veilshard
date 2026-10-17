@@ -41,3 +41,7 @@ The low-poly 2.5D direction in `docs/visual_direction.md` supersedes the art dir
 ## Floating HUD
 
 See `docs/battle_ui.md`. Keep card geometry in card_layout.py, presentation/easing/input in card_hand.py, face art in card_art.py, and status/buttons in battle_hud.py. Never reserve a footer or shrink the world for HUD. Preserve exact duplicate-card occurrence removal and topmost transformed hit testing. Keep the fan shallow (three cards: about 7 degrees and 14 pixels rise).
+
+## Timed combat presentation
+
+See `docs/combat_animation.md`. App actions reserve one callback in ActionTimeline and call the existing combat API exactly once at visual impact. Do not call combat both on click and on impact. Keep combat input locked until recovery ends; pause freezes timing and menu cancels unresolved work. Pending card indices must be excluded only from the visual hand until impact. HP numbers remain authoritative; only bar fill interpolates.

@@ -1,6 +1,6 @@
 # Prototype rules and extension points
 
-Each stage starts at 30 HP with a fresh 12-card deck. Each player turn restores energy to 2 and draws 3 cards. Attack costs 1 and deals 6; Heavy Attack costs 2 and deals 10; Shield costs 1 and grants 6 Block; Heal costs 1 and restores up to 6 HP. Played cards enter discard immediately. Unplayed cards enter discard at End Turn. Draws refill an exhausted pile from shuffled discards, including when exhaustion happens partway through a draw.
+Each stage starts at 30 HP with a fresh 12-card deck. Each player turn restores energy to 2 and draws 3 cards. Attack costs 1 and deals 6; Heavy Attack costs 2 and deals 10; Shield costs 1 and grants 6 Block; Heal costs 1 and restores up to 6 HP. Played cards enter discard when their effect resolves. The app defers that single model call to visual impact; the pure combat model stays synchronous. Unplayed cards enter discard at End Turn. Draws refill an exhausted pile from shuffled discards, including when exhaustion happens partway through a draw.
 
 Damage consumes Block first, then HP; values never fall below zero. Player Block expires after the enemy action, including Charge, Defend, and Heal. Enemy Block expires at the start of its next enemy action, after protecting through one complete player turn. A Defend action then grants new Block. Enemy healing cannot exceed maximum HP.
 

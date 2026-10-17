@@ -24,12 +24,15 @@ def test_scene_rendering_and_input(tmp_path):
         app.update(0.3); app.draw()
         b=app.campaign.battle; old=len(b.deck.hand)
         click(app,(app.hand.views[0].pose.x,app.hand.views[0].pose.y))
+        assert len(app.hand.views)==old-1 and len(b.deck.hand)==old
+        app.update(app.timeline.impact)
         assert len(b.deck.hand)==old-1
         app.event(pygame.event.Event(pygame.KEYDOWN,key=pygame.K_ESCAPE))
         lock=app.lock; app.update(1); app.draw()
         assert app.paused and app.lock==lock
         click(app,(800,440)); assert not app.paused
-        app.update(1); app.draw(); click(app,(1420,780)); assert b.turn==2
+        app.update(1); app.draw(); click(app,(1420,780)); assert b.turn==1
+        app.update(app.timeline.impact); assert b.turn==2
         for i in range(5):
             app.campaign.index=i; app.load_stage()
             for scene in ("intro","battle","clear","over","victory"):
