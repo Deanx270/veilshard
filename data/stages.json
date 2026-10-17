@@ -26,7 +26,7 @@
       "layers": [
         {
           "path": "assets/backgrounds/stage_01/background.png",
-          "depth": 0.2,
+          "depth": 0,
           "foreground": false
         }
       ],
@@ -35,31 +35,70 @@
     "player": {
       "path": "assets/characters/duelist.png",
       "position": [
-        360,
-        625
+        470,
+        610
       ],
       "anchor": [
         0.5,
-        1.0
+        0.95
       ],
       "size": [
-        300,
-        440
-      ]
+        290,
+        390
+      ],
+      "scale": 1.0,
+      "render_order": 20,
+      "flip_x": false,
+      "animations": {},
+      "shadow": {
+        "size": [
+          160,
+          42
+        ],
+        "offset": [
+          0,
+          0
+        ],
+        "opacity": 100
+      }
     },
     "opponent": {
       "path": "assets/enemies/stage_01.png",
       "position": [
-        1200,
-        625
+        1100,
+        500
       ],
       "anchor": [
         0.5,
-        1.0
+        0.95
       ],
       "size": [
-        350,
-        450
+        270,
+        360
+      ],
+      "scale": 1.0,
+      "render_order": 10,
+      "flip_x": true,
+      "animations": {},
+      "shadow": {
+        "size": [
+          160,
+          42
+        ],
+        "offset": [
+          0,
+          0
+        ],
+        "opacity": 100
+      }
+    },
+    "camera": {
+      "composition": "fixed_three_quarter",
+      "zoom": 1.0,
+      "impact_zoom": 0.035,
+      "focus": [
+        800,
+        430
       ]
     }
   },
@@ -94,7 +133,7 @@
       "layers": [
         {
           "path": "assets/backgrounds/stage_02/background.png",
-          "depth": 0.2,
+          "depth": 0,
           "foreground": false
         }
       ],
@@ -103,31 +142,70 @@
     "player": {
       "path": "assets/characters/duelist.png",
       "position": [
-        360,
-        625
+        470,
+        610
       ],
       "anchor": [
         0.5,
-        1.0
+        0.95
       ],
       "size": [
-        300,
-        440
-      ]
+        290,
+        390
+      ],
+      "scale": 1.0,
+      "render_order": 20,
+      "flip_x": false,
+      "animations": {},
+      "shadow": {
+        "size": [
+          160,
+          42
+        ],
+        "offset": [
+          0,
+          0
+        ],
+        "opacity": 100
+      }
     },
     "opponent": {
       "path": "assets/enemies/stage_02.png",
       "position": [
-        1200,
-        625
+        1100,
+        500
       ],
       "anchor": [
         0.5,
-        1.0
+        0.95
       ],
       "size": [
-        350,
-        450
+        270,
+        360
+      ],
+      "scale": 1.0,
+      "render_order": 10,
+      "flip_x": true,
+      "animations": {},
+      "shadow": {
+        "size": [
+          160,
+          42
+        ],
+        "offset": [
+          0,
+          0
+        ],
+        "opacity": 100
+      }
+    },
+    "camera": {
+      "composition": "fixed_three_quarter",
+      "zoom": 1.0,
+      "impact_zoom": 0.035,
+      "focus": [
+        800,
+        430
       ]
     }
   },
@@ -162,7 +240,7 @@
       "layers": [
         {
           "path": "assets/backgrounds/stage_03/background.png",
-          "depth": 0.2,
+          "depth": 0,
           "foreground": false
         }
       ],
@@ -171,31 +249,70 @@
     "player": {
       "path": "assets/characters/duelist.png",
       "position": [
-        360,
-        625
+        470,
+        610
       ],
       "anchor": [
         0.5,
-        1.0
+        0.95
       ],
       "size": [
-        300,
-        440
-      ]
+        290,
+        390
+      ],
+      "scale": 1.0,
+      "render_order": 20,
+      "flip_x": false,
+      "animations": {},
+      "shadow": {
+        "size": [
+          160,
+          42
+        ],
+        "offset": [
+          0,
+          0
+        ],
+        "opacity": 100
+      }
     },
     "opponent": {
       "path": "assets/enemies/stage_03.png",
       "position": [
-        1200,
-        625
+        1100,
+        500
       ],
       "anchor": [
         0.5,
-        1.0
+        0.95
       ],
       "size": [
-        350,
-        450
+        270,
+        360
+      ],
+      "scale": 1.0,
+      "render_order": 10,
+      "flip_x": true,
+      "animations": {},
+      "shadow": {
+        "size": [
+          160,
+          42
+        ],
+        "offset": [
+          0,
+          0
+        ],
+        "opacity": 100
+      }
+    },
+    "camera": {
+      "composition": "fixed_three_quarter",
+      "zoom": 1.0,
+      "impact_zoom": 0.035,
+      "focus": [
+        800,
+        430
       ]
     }
   },
@@ -230,7 +347,7 @@
       "layers": [
         {
           "path": "assets/backgrounds/stage_04/background.png",
-          "depth": 0.2,
+          "depth": 0,
           "foreground": false
         }
       ],
@@ -239,31 +356,70 @@
     "player": {
       "path": "assets/characters/duelist.png",
       "position": [
-        360,
-        625
+        470,
+        610
       ],
       "anchor": [
         0.5,
-        1.0
+        0.95
       ],
       "size": [
-        300,
-        440
-      ]
+        290,
+        390
+      ],
+      "scale": 1.0,
+      "render_order": 20,
+      "flip_x": false,
+      "animations": {},
+      "shadow": {
+        "size": [
+          160,
+          42
+        ],
+        "offset": [
+          0,
+          0
+        ],
+        "opacity": 100
+      }
     },
     "opponent": {
       "path": "assets/enemies/stage_04.png",
       "position": [
-        1200,
-        625
+        1100,
+        500
       ],
       "anchor": [
         0.5,
-        1.0
+        0.95
       ],
       "size": [
-        350,
-        450
+        270,
+        360
+      ],
+      "scale": 1.0,
+      "render_order": 10,
+      "flip_x": true,
+      "animations": {},
+      "shadow": {
+        "size": [
+          160,
+          42
+        ],
+        "offset": [
+          0,
+          0
+        ],
+        "opacity": 100
+      }
+    },
+    "camera": {
+      "composition": "fixed_three_quarter",
+      "zoom": 1.0,
+      "impact_zoom": 0.035,
+      "focus": [
+        800,
+        430
       ]
     }
   },
@@ -311,7 +467,7 @@
       "layers": [
         {
           "path": "assets/backgrounds/stage_05/background.png",
-          "depth": 0.2,
+          "depth": 0,
           "foreground": false
         }
       ],
@@ -320,31 +476,70 @@
     "player": {
       "path": "assets/characters/duelist.png",
       "position": [
-        360,
-        625
+        470,
+        610
       ],
       "anchor": [
         0.5,
-        1.0
+        0.95
       ],
       "size": [
-        300,
-        440
-      ]
+        290,
+        390
+      ],
+      "scale": 1.0,
+      "render_order": 20,
+      "flip_x": false,
+      "animations": {},
+      "shadow": {
+        "size": [
+          160,
+          42
+        ],
+        "offset": [
+          0,
+          0
+        ],
+        "opacity": 100
+      }
     },
     "opponent": {
       "path": "assets/enemies/stage_05.png",
       "position": [
-        1200,
-        625
+        1100,
+        500
       ],
       "anchor": [
         0.5,
-        1.0
+        0.95
       ],
       "size": [
-        350,
-        450
+        270,
+        360
+      ],
+      "scale": 1.0,
+      "render_order": 10,
+      "flip_x": true,
+      "animations": {},
+      "shadow": {
+        "size": [
+          160,
+          42
+        ],
+        "offset": [
+          0,
+          0
+        ],
+        "opacity": 100
+      }
+    },
+    "camera": {
+      "composition": "fixed_three_quarter",
+      "zoom": 1.0,
+      "impact_zoom": 0.035,
+      "focus": [
+        800,
+        430
       ]
     }
   }

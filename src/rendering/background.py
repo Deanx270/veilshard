@@ -1,6 +1,7 @@
 import math
 import random
 import pygame
+from src.rendering.ember_forest import draw_ember_forest
 
 class Background:
     """Full-canvas layers; images are loaded/scaled once, never each frame."""
@@ -43,6 +44,8 @@ class Background:
             pygame.draw.line(surface,(38,45,64),(0,y),(1600,y),1)
         for x in range(-800,2600,300):
             pygame.draw.line(surface,(38,45,64),(800,560),(x,900),1)
+        if stage_id == 1:
+            draw_ember_forest(surface)
         return surface
 
     def draw(self, surface, time, foreground=False, shake=(0,0)):

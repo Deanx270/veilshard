@@ -33,3 +33,7 @@ The environment developer owns Blender sources and exports. The gameplay/UI deve
 ## Extensions
 
 Likely next steps are final illustrations, audio, saving progress, status effects, card rewards, balance, data validation, and richer feedback. Keep changes scoped; avoid coupling story to combat or introducing a real-time 3D engine. Do not require Blender to play the game.
+
+## Current visual architecture
+
+The low-poly 2.5D direction in `docs/visual_direction.md` supersedes the art direction of the original TASK.md. Preserve completed combat. `Battlefield` composites backgrounds, ordered `CharacterSprite` actors/shadows, foregrounds, and effects before `Camera` applies impact zoom/shake. UI draws afterward. Animation frames, alpha-preserving hit variants, and shadows are cached; update timers only while unpaused. Actor clip events are presentation-only and never change combat outcomes. Configure positions, normalized ground anchors, scale, order, shadow, and clips through stages.json. Prioritize Stage 1 composition and final exports before producing finished art for later stages. No runtime Blender or real-time 3D dependencies.

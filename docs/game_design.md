@@ -11,3 +11,5 @@ All five stages use deterministic cyclic patterns configured in `data/stages.jso
 The model has no Pygame dependency. `Battle.play` and `Battle.end_turn` return presentation effects; `Campaign` manages navigation independently. The app locks input briefly after actions and defers scene resolution until feedback has been displayed. Pause freezes combat presentation and locks without taking another turn.
 
 Future work: card status effects, richer enemy models, audio, persistent progress, data validation, localization, controller support, final art, and accessible text sizing. Add distinct effect dispatch before adding card categories beyond attack/block/heal. Current JSON is trusted project configuration, not a mod-loading format.
+
+Visual direction is now anime-inspired low-poly 2.5D; see `visual_direction.md`. This changes only rendering and asset contracts, not these rules.

@@ -1,10 +1,8 @@
-import math
 import pygame
 from src.core.input import SIZE, logical_mouse, viewport
 from src.scenes.campaign import Campaign
 from src.rendering.assets import Assets
-from src.rendering.background import Background
-from src.rendering.characters import placeholder, draw_character
+from src.rendering.battlefield import Battlefield
 from src.rendering.effects import Effects
 from src.ui.widgets import UI, INK, MUTED
 
@@ -36,20 +34,16 @@ class App:
         stage=self.campaign.stage
         if self.loaded_stage==stage["id"]: return
         self.loaded_stage=stage["id"]
-        self.background=Background(self.assets,stage)
-        self.characters=[]
-        for key in ("player","opponent"):
-            spec=stage[key]
-            asset=self.assets.image(spec["path"],tuple(spec["size"]))
-            self.characters.append(asset or placeholder(spec["size"],stage["accent"] if key=="opponent" else (146,175,244),key=="opponent",key=="opponent" and stage["id"] in (2,4)))
+        self.battlefield=Battlefield(self.assets,stage)
+        self.background=self.battlefield.background
 
     def change_feedback(self):
         if self.campaign.scene!=self.last_scene:
             self.last_scene=self.campaign.scene
             self.fade=0.28
             self.card_rects=[]
-        self.played_card=None
-        self.played_age=0.0
+            self.played_card=None
+            self.played_age=0.0
         self.load_stage()
 
     def action(self,name):
@@ -58,6 +52,7 @@ class App:
         elif name=="battle":
             c.enter_battle()
             self.effects=Effects()
+            self.loaded_stage=None
         elif name=="next": c.advance()
         elif name=="retry": c.retry()
         elif name=="menu":
@@ -65,7 +60,10 @@ class App:
         elif name=="quit": self.running=False
         elif name=="resume": self.paused=False
         elif name=="end" and c.battle and not self.lock:
-            self.effects.add(c.battle.end_turn(),c.stage)
+            intent=c.battle.intent.kind
+            effects=c.battle.end_turn()
+            self.effects.add(effects,c.stage)
+            self.battlefield.feedback(effects,"opponent", "attack" if intent=="special" else intent)
             self.lock=0.65
         self.change_feedback()
 
@@ -90,6 +88,7 @@ class App:
                             self.played_card=(card,rect.copy())
                             self.played_age=0.0
                             self.effects.add(effects,self.campaign.stage)
+                            self.battlefield.feedback(effects,"player", "defend" if card.category=="block" else card.category)
                             self.lock=0.35
                         return
 
@@ -97,6 +96,7 @@ class App:
         if not self.paused:
             self.time+=dt
             self.effects.update(dt)
+            self.battlefield.update(dt)
             self.played_age+=dt
             if self.played_age>=0.35: self.played_card=None
             self.lock=max(0,self.lock-dt)
@@ -113,10 +113,10 @@ class App:
         c=self.campaign; s=self.canvas; ui=self.ui
         mouse=logical_mouse(pygame.mouse.get_pos(),self.window.get_size())
         self.buttons={}; self.card_rects=[]
-        self.background.draw(s,self.time,shake=self.effects.offset(self.time))
         if c.scene=="battle":
             self.draw_battle(mouse)
         else:
+            self.background.draw(s,self.time)
             self.background.draw(s,self.time,True)
             ui.panel(s,pygame.Rect(390,195,820,530),(17,24,43),(65,76,108),24)
             ui.text(s,c.story.get("subtitle", "").upper(),(800,245),18,c.stage["accent"],True)
@@ -159,11 +159,7 @@ class App:
 
     def draw_battle(self,mouse):
         c=self.campaign; b=c.battle; s=self.canvas; ui=self.ui; accent=c.stage["accent"]
-        for image,key in zip(self.characters,("player","opponent")):
-            offset=self.effects.offset(self.time)
-            draw_character(s,image,c.stage[key],(offset[0],offset[1]+math.sin(self.time*1.8)*3))
-        self.background.draw(s,self.time,True,self.effects.offset(self.time))
-        self.effects.draw(s,ui.font(34))
+        self.battlefield.draw(s,self.time,self.effects,ui.font(34))
         ui.text(s,f"{c.index+1:02}  /  {c.stage['name'].upper()}",(42,28),23,accent)
         ui.text(s,f"TURN {b.turn:02}     •     ESC TO PAUSE",(1190,30),18,MUTED)
         ui.health(s,"The Duelist",b.player,pygame.Rect(60,85,420,82),(144,176,245))
