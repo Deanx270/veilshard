@@ -1,0 +1,38 @@
+[
+  {
+    "id": "attack",
+    "name": "Attack",
+    "cost": 1,
+    "category": "attack",
+    "amount": 6,
+    "description": "Deal 6 damage.",
+    "count": 5
+  },
+  {
+    "id": "heavy",
+    "name": "Heavy Attack",
+    "cost": 2,
+    "category": "attack",
+    "amount": 10,
+    "description": "Deal 10 damage.",
+    "count": 2
+  },
+  {
+    "id": "shield",
+    "name": "Shield",
+    "cost": 1,
+    "category": "block",
+    "amount": 6,
+    "description": "Gain 6 Block.",
+    "count": 3
+  },
+  {
+    "id": "heal",
+    "name": "Heal",
+    "cost": 1,
+    "category": "heal",
+    "amount": 6,
+    "description": "Recover up to 6 HP.",
+    "count": 2
+  }
+]

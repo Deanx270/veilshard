@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+.coverage
+htmlcov/
+*.blend1
+*.blend2
+art_sources/blender/*.blend
+.DS_Store
+Thumbs.db

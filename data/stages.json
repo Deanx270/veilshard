@@ -1,0 +1,351 @@
+[
+  {
+    "id": 1,
+    "name": "Ember Forest",
+    "accent": [
+      238,
+      132,
+      90
+    ],
+    "enemy": {
+      "name": "Flame Warden",
+      "hp": 28,
+      "pattern": [
+        [
+          "attack",
+          5
+        ],
+        [
+          "attack",
+          7
+        ]
+      ],
+      "rage_pattern": null
+    },
+    "background": {
+      "layers": [
+        {
+          "path": "assets/backgrounds/stage_01/background.png",
+          "depth": 0.2,
+          "foreground": false
+        }
+      ],
+      "sequences": []
+    },
+    "player": {
+      "path": "assets/characters/duelist.png",
+      "position": [
+        360,
+        625
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "size": [
+        300,
+        440
+      ]
+    },
+    "opponent": {
+      "path": "assets/enemies/stage_01.png",
+      "position": [
+        1200,
+        625
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "size": [
+        350,
+        450
+      ]
+    }
+  },
+  {
+    "id": 2,
+    "name": "Frozen Ruins",
+    "accent": [
+      112,
+      203,
+      236
+    ],
+    "enemy": {
+      "name": "Frozen Beast",
+      "hp": 34,
+      "pattern": [
+        [
+          "attack",
+          6
+        ],
+        [
+          "defend",
+          7
+        ],
+        [
+          "attack",
+          8
+        ]
+      ],
+      "rage_pattern": null
+    },
+    "background": {
+      "layers": [
+        {
+          "path": "assets/backgrounds/stage_02/background.png",
+          "depth": 0.2,
+          "foreground": false
+        }
+      ],
+      "sequences": []
+    },
+    "player": {
+      "path": "assets/characters/duelist.png",
+      "position": [
+        360,
+        625
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "size": [
+        300,
+        440
+      ]
+    },
+    "opponent": {
+      "path": "assets/enemies/stage_02.png",
+      "position": [
+        1200,
+        625
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "size": [
+        350,
+        450
+      ]
+    }
+  },
+  {
+    "id": 3,
+    "name": "Storm Tower",
+    "accent": [
+      176,
+      150,
+      255
+    ],
+    "enemy": {
+      "name": "Stormcaller",
+      "hp": 36,
+      "pattern": [
+        [
+          "charge",
+          0
+        ],
+        [
+          "special",
+          11
+        ],
+        [
+          "attack",
+          5
+        ]
+      ],
+      "rage_pattern": null
+    },
+    "background": {
+      "layers": [
+        {
+          "path": "assets/backgrounds/stage_03/background.png",
+          "depth": 0.2,
+          "foreground": false
+        }
+      ],
+      "sequences": []
+    },
+    "player": {
+      "path": "assets/characters/duelist.png",
+      "position": [
+        360,
+        625
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "size": [
+        300,
+        440
+      ]
+    },
+    "opponent": {
+      "path": "assets/enemies/stage_03.png",
+      "position": [
+        1200,
+        625
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "size": [
+        350,
+        450
+      ]
+    }
+  },
+  {
+    "id": 4,
+    "name": "Corrupted Grove",
+    "accent": [
+      126,
+      221,
+      166
+    ],
+    "enemy": {
+      "name": "Corrupted Ancient",
+      "hp": 38,
+      "pattern": [
+        [
+          "attack",
+          6
+        ],
+        [
+          "heal",
+          5
+        ],
+        [
+          "attack",
+          8
+        ]
+      ],
+      "rage_pattern": null
+    },
+    "background": {
+      "layers": [
+        {
+          "path": "assets/backgrounds/stage_04/background.png",
+          "depth": 0.2,
+          "foreground": false
+        }
+      ],
+      "sequences": []
+    },
+    "player": {
+      "path": "assets/characters/duelist.png",
+      "position": [
+        360,
+        625
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "size": [
+        300,
+        440
+      ]
+    },
+    "opponent": {
+      "path": "assets/enemies/stage_04.png",
+      "position": [
+        1200,
+        625
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "size": [
+        350,
+        450
+      ]
+    }
+  },
+  {
+    "id": 5,
+    "name": "Shattered Citadel",
+    "accent": [
+      241,
+      160,
+      203
+    ],
+    "enemy": {
+      "name": "Shattered Guardian",
+      "hp": 44,
+      "pattern": [
+        [
+          "attack",
+          6
+        ],
+        [
+          "defend",
+          6
+        ],
+        [
+          "attack",
+          8
+        ]
+      ],
+      "rage_pattern": [
+        [
+          "charge",
+          0
+        ],
+        [
+          "special",
+          12
+        ],
+        [
+          "attack",
+          7
+        ]
+      ]
+    },
+    "background": {
+      "layers": [
+        {
+          "path": "assets/backgrounds/stage_05/background.png",
+          "depth": 0.2,
+          "foreground": false
+        }
+      ],
+      "sequences": []
+    },
+    "player": {
+      "path": "assets/characters/duelist.png",
+      "position": [
+        360,
+        625
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "size": [
+        300,
+        440
+      ]
+    },
+    "opponent": {
+      "path": "assets/enemies/stage_05.png",
+      "position": [
+        1200,
+        625
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "size": [
+        350,
+        450
+      ]
+    }
+  }
+]
