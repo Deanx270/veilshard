@@ -65,3 +65,5 @@ Art is intentionally temporary: faceted stand-ins and procedural scenery, no fin
 See [visual direction](docs/visual_direction.md), [game rules](docs/game_design.md) and the [Blender pipeline](docs/blender_pipeline.md) before replacing assets.
 
 The battle HUD floats above the full viewport: compact player status bottom-left, enemy health/intent near the sprite, and a circular End Turn bottom-right. Three cards use a restrained 7-degree fan with a 14-pixel arc. See [battle UI](docs/battle_ui.md) for tuning and input behavior.
+
+Stage 1 now uses the supplied five-layer Muse Spark environment with a centered overscan crop and impact-driven parallax. Press F1 in Stage 1 to access temporary camera controls; see [Stage 1 parallax](docs/stage1_parallax.md). Stages 2–5 retain their existing backgrounds.

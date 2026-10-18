@@ -3,6 +3,7 @@ import math
 import pygame
 from src.rendering.background import Background
 from src.rendering.characters import CharacterSprite
+from src.rendering.parallax import ParallaxBackground, ParallaxCamera
 
 
 class Camera:
@@ -49,11 +50,13 @@ class Camera:
 
 class Battlefield:
     def __init__(self, assets, stage: dict):
-        self.background = Background(assets, stage)
-        self.camera = Camera(stage.get("camera", {}))
+        self.parallax = "manifest" in stage["background"]
+        self.background = ParallaxBackground(assets,stage["background"]) if self.parallax else Background(assets, stage)
+        self.camera = ParallaxCamera(self.background,stage.get("camera",{})) if self.parallax else Camera(stage.get("camera", {}))
         self.motion=None
         self.reactions={}
-        self.world = pygame.Surface((1600, 900))
+        self.world = pygame.Surface(self.background.size if self.parallax else (1600, 900))
+        self.effect_layer=pygame.Surface((1600,900),pygame.SRCALPHA)
         self.actors = {
             key: CharacterSprite(assets, stage[key], stage["accent"] if key == "opponent" else (146,175,244),
                                  enemy=key == "opponent", beast=key == "opponent" and stage["id"] in (2,4))
@@ -77,13 +80,14 @@ class Battlefield:
 
     def draw(self, destination, time, effects, font):
         self.background.draw(self.world, time)
+        ground_offset=self.background.actor_offset if self.parallax else (0,0)
         for key in sorted(self.actors,key=lambda key:self.actors[key].order):
             offset=(0,0)
             if self.motion and self.motion.source==key: offset=self.motion.offset()
             if key in self.reactions:
                 t,power=self.reactions[key]
                 offset=((1 if key=="opponent" else -1)*power*math.sin(math.pi*t/0.30),0)
-            self.actors[key].draw(self.world,offset)
+            self.actors[key].draw(self.world,tuple(offset[i]+ground_offset[i] for i in range(2)))
         self.background.draw(self.world, time, foreground=True)
         if self.motion and self.motion.active and self.motion.kind in ("attack","heavy","special"):
             t=(self.motion.elapsed-(self.motion.impact-0.08))/0.08
@@ -92,11 +96,17 @@ class Battlefield:
                 target=self.actors["opponent" if self.motion.source=="player" else "player"].spec
                 start=(source["position"][0],source["position"][1]-source["size"][1]*source.get("scale",1)*0.5)
                 end=(target["position"][0],target["position"][1]-target["size"][1]*target.get("scale",1)*0.5)
+                start=tuple(start[i]+ground_offset[i] for i in range(2))
+                end=tuple(end[i]+ground_offset[i] for i in range(2))
                 head=tuple(start[i]+(end[i]-start[i])*t for i in range(2))
                 tail=tuple(start[i]+(end[i]-start[i])*max(0,t-0.18) for i in range(2))
                 heavy=self.motion.kind in ("heavy","special")
                 pygame.draw.line(self.world,(219,167,244) if heavy else (251,204,139),tail,head,7 if heavy else 3)
                 x,y=head
                 pygame.draw.polygon(self.world,(255,235,208),[(x-9,y),(x,y-5),(x+9,y),(x,y+5)])
-        effects.draw(self.world, font)
+        if self.parallax:
+            self.effect_layer.fill((0,0,0,0))
+            effects.draw(self.effect_layer,font)
+            self.world.blit(self.effect_layer,tuple(round(v) for v in ground_offset))
+        else: effects.draw(self.world, font)
         self.camera.present(self.world, destination)

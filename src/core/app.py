@@ -76,6 +76,8 @@ class App:
 
     def event(self,event):
         if event.type==pygame.QUIT: self.running=False
+        if event.type==pygame.KEYDOWN and self.campaign.scene=="battle" and not self.paused and self.battlefield.parallax:
+            if self.battlefield.camera.debug_key(event.key): return
         if event.type==pygame.KEYDOWN and event.key==pygame.K_ESCAPE:
             if self.campaign.scene=="battle": self.paused=not self.paused
             else: self.action("menu")
@@ -191,6 +193,14 @@ class App:
         if enabled: self.buttons["end"]=self.hud.end
         self.hand.sync(self.visible_hand())
         self.hand.draw(self.canvas,b.energy)
+        if self.battlefield.parallax and self.battlefield.camera.debug:
+            from src.ui.battle_hud import glass
+            camera=self.battlefield.camera
+            glass(self.canvas,(425,17,870,86),210)
+            self.ui.text(self.canvas,"PARALLAX DEBUG  |  F1 hide  F2 parallax  F3 master  F4 shake  F5 zoom",(440,24),18)
+            mode="MASTER" if self.background.compare else "LAYERS"
+            self.ui.text(self.canvas,f"{mode}  parallax={self.background.enabled}  pan=({camera.pan[0]:.1f}, {camera.pan[1]:.1f})  zoom={camera.zoom:.3f}",(440,49),17)
+            self.ui.text(self.canvas,"Arrows: pan to limits   Home: reset view   (source-pixel units)",(440,73),16)
         if not b.deck.hand:
             self.ui.text(self.canvas,"End your turn to draw three cards.",(800,804),21,INK,True)
 

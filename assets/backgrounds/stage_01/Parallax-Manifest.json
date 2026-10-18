@@ -1,0 +1,156 @@
+{
+  "source": {
+    "original": "stage1_bg.png",
+    "original_size": [
+      1920,
+      1080
+    ],
+    "expanded_master": "expanded_master.png",
+    "expanded_size": [
+      2304,
+      1296
+    ],
+    "center_offset": [
+      192,
+      108
+    ],
+    "notes": "Original preserved exactly centered in expanded_master. Expanded border generatively inpainted with same low-poly style, sunset palette."
+  },
+  "canvas": {
+    "width": 2304,
+    "height": 1296,
+    "coordinate_system": "top-left origin, all layers share identical dimensions and alignment"
+  },
+  "layers": [
+    {
+      "file": "sky.png",
+      "name": "sky",
+      "description": "sky, clouds, distant mountains, sun",
+      "depth": 0,
+      "z_index": 0,
+      "parallax_factor": {
+        "x": 0.05,
+        "y": 0.05
+      },
+      "default_position": [
+        0,
+        0
+      ],
+      "alpha": "opaque",
+      "blend_mode": "normal"
+    },
+    {
+      "file": "distant.png",
+      "name": "distant",
+      "description": "bridge, river, cliffs, ruins, distant architecture, tiny pines on cliffs, river rocks",
+      "depth": 1,
+      "z_index": 1,
+      "parallax_factor": {
+        "x": 0.2,
+        "y": 0.15
+      },
+      "default_position": [
+        0,
+        0
+      ],
+      "alpha": "transparent background, inpainted behind midground",
+      "blend_mode": "normal"
+    },
+    {
+      "file": "ground.png",
+      "name": "ground",
+      "description": "battlefield clearing and surrounding terrain - central faceted sand clearing + flat grass base, inpainted continuous under rocks/trees",
+      "depth": 2,
+      "z_index": 2,
+      "parallax_factor": {
+        "x": 0.5,
+        "y": 0.4
+      },
+      "default_position": [
+        0,
+        0
+      ],
+      "alpha": "transparent top half, opaque ground bottom",
+      "blend_mode": "normal"
+    },
+    {
+      "file": "midground.png",
+      "name": "midground",
+      "description": "trees, cabin, banners, fences, campfire - large oak, cabin, pine trees, red banners with lights, fence, bench, campfire flame, mid rocks",
+      "depth": 3,
+      "z_index": 3,
+      "parallax_factor": {
+        "x": 0.8,
+        "y": 0.65
+      },
+      "default_position": [
+        0,
+        0
+      ],
+      "alpha": "transparent, no ground fill",
+      "blend_mode": "normal"
+    },
+    {
+      "file": "foreground.png",
+      "name": "foreground",
+      "description": "nearest rocks, grass, and foreground details - closest boulders, spiky grass tufts, small flowers, berry bush",
+      "depth": 4,
+      "z_index": 4,
+      "parallax_factor": {
+        "x": 1.15,
+        "y": 0.9
+      },
+      "default_position": [
+        0,
+        0
+      ],
+      "alpha": "transparent top ~65%, dense bottom edge",
+      "blend_mode": "normal"
+    }
+  ],
+  "render_order": [
+    "sky.png",
+    "distant.png",
+    "ground.png",
+    "midground.png",
+    "foreground.png"
+  ],
+  "parallax": {
+    "type": "2.5D horizontal+vertical translation",
+    "max_offset_px": {
+      "x": 40,
+      "y": 25
+    },
+    "camera_shake": {
+      "max_jitter": 6,
+      "note": "Apply small random offset multiplied by parallax_factor per layer"
+    },
+    "zoom": {
+      "range": [
+        0.95,
+        1.15
+      ],
+      "center": [
+        1152,
+        648
+      ],
+      "note": "Zoom toward center, layers scale slightly by depth to enhance parallax - foreground scales more"
+    },
+    "recommendation": "Keep factors restrained: sky 0.05, distant 0.2, ground 0.5, midground 0.8, foreground 1.15. Avoid cardboard effect by not exceeding 1.3x separation. Ensure inpainted areas cover gaps when layers shift up to 40px."
+  },
+  "validation": {
+    "recombine_test": "recombined_final.png closely matches expanded_master.png in central 1920x1080, mean diff ~28 due to generative re-interpretation but visually consistent",
+    "parallax_tests": [
+      "parallax_test_horizontal_40px.png",
+      "parallax_test_vertical_25px.png"
+    ],
+    "layer_preview": "preview_layers_separated.png",
+    "comparison": "comparison_master_vs_recombined.png",
+    "gaps": "No visible holes when shifting up to 40px horizontal, ground and sky layers provide continuous fill behind"
+  },
+  "usage_pygame_ce": {
+    "loading": "Load all PNGs with pygame.image.load(...).convert_alpha()",
+    "drawing": "Blit in render_order, each layer position = default_position + camera_offset * parallax_factor",
+    "example": "offset = Vector2(camera_x, camera_y); for layer in layers: pos = layer.default + offset * layer.parallax_factor; screen.blit(layer.image, pos)"
+  }
+}

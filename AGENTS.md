@@ -45,3 +45,7 @@ See `docs/battle_ui.md`. Keep card geometry in card_layout.py, presentation/easi
 ## Timed combat presentation
 
 See `docs/combat_animation.md`. App actions reserve one callback in ActionTimeline and call the existing combat API exactly once at visual impact. Do not call combat both on click and on impact. Keep combat input locked until recovery ends; pause freezes timing and menu cancels unresolved work. Pending card indices must be excluded only from the visual hand until impact. HP numbers remain authoritative; only bar fill interpolates.
+
+## Manifest backgrounds
+
+Stage 1 uses `src/rendering/parallax.py` and its source manifest under assets/backgrounds/stage_01. See docs/stage1_parallax.md. Preserve the original-view crop within the expanded canvas; never squash overscan into 1600×900. Actor/effect translation must match the ground factor, foreground must draw after actors, and UI stays outside the camera. Idle is stable. Do not execute the example snippet or alter supplied PNGs to hide asset issues. Non-manifest stages retain the legacy path.

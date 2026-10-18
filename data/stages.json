@@ -23,14 +23,17 @@
       "rage_pattern": null
     },
     "background": {
-      "layers": [
-        {
-          "path": "assets/backgrounds/stage_01/background.png",
-          "depth": 0,
-          "foreground": false
-        }
-      ],
-      "sequences": []
+      "manifest": "assets/backgrounds/stage_01/Parallax-Manifest.json",
+      "parallax": {
+        "enabled": true,
+        "foreground_layers": [
+          "foreground"
+        ],
+        "actor_layer": "ground",
+        "smoothing": 9.0,
+        "impact_pan": 8.0,
+        "debug_controls": true
+      }
     },
     "player": {
       "path": "assets/characters/duelist.png",
@@ -66,7 +69,7 @@
       "path": "assets/enemies/stage_01.png",
       "position": [
         1100,
-        500
+        580
       ],
       "anchor": [
         0.5,

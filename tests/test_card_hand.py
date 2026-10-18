@@ -61,7 +61,7 @@ def test_floating_hud_no_footer_and_resized_card_click():
         app.action("start"); app.action("battle"); app.update(.3); app.fade=0
         app.draw()
         # Uncovered lower-screen pixels equal the actual world, not a footer.
-        assert app.canvas.get_at((1200,870))==app.battlefield.world.get_at((1200,870))
+        assert app.canvas.get_at((1200,870))==app.battlefield.world.get_at((1200+app.background.inset[0],870+app.background.inset[1]))
         app.window=pygame.display.set_mode((1000,1000),pygame.RESIZABLE)
         app.draw()
         pose=app.hand.views[0].pose; area=viewport(app.window.get_size())
