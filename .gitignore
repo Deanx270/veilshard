@@ -9,3 +9,6 @@ htmlcov/
 art_sources/blender/*.blend
 .DS_Store
 Thumbs.db
+
+animation-preview.json
+.pytest_tmp/

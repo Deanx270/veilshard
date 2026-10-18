@@ -31,39 +31,138 @@
         ],
         "actor_layer": "ground",
         "smoothing": 9.0,
-        "impact_pan": 8.0,
-        "debug_controls": true
+        "impact_pan": 14.0,
+        "debug_controls": true,
+        "max_jitter": 10
       }
     },
     "player": {
-      "path": "assets/characters/duelist.png",
+      "path": "assets/test-animation/idle1.png",
       "position": [
-        470,
-        610
+        741,
+        939
       ],
       "anchor": [
         0.5,
-        0.95
+        1.0
       ],
       "size": [
-        290,
-        390
+        1445,
+        813
       ],
       "scale": 1.0,
       "render_order": 20,
       "flip_x": false,
-      "animations": {},
+      "animations": {
+        "idle": {
+          "frames": [
+            "assets/test-animation/idle1.png",
+            "assets/test-animation/idle2.png",
+            "assets/test-animation/idle3.png",
+            "assets/test-animation/idle4.png",
+            "assets/test-animation/idle5.png",
+            "assets/test-animation/idle6.png",
+            "assets/test-animation/idle7.png",
+            "assets/test-animation/idle8.png",
+            "assets/test-animation/idle9.png",
+            "assets/test-animation/idle10.png",
+            "assets/test-animation/idle11.png",
+            "assets/test-animation/idle12.png",
+            "assets/test-animation/idle13.png",
+            "assets/test-animation/idle14.png"
+          ],
+          "fps": 10,
+          "loop": true
+        },
+        "attack": {
+          "frames": [
+            "assets/test-animation/attack1.png",
+            "assets/test-animation/attack2.png",
+            "assets/test-animation/attack3.png",
+            "assets/test-animation/attack4.png",
+            "assets/test-animation/attack5.png",
+            "assets/test-animation/attack6.png",
+            "assets/test-animation/attack7.png",
+            "assets/test-animation/attack8.png",
+            "assets/test-animation/attack9.png",
+            "assets/test-animation/attack10.png",
+            "assets/test-animation/attack11.png",
+            "assets/test-animation/attack12.png",
+            "assets/test-animation/attack13.png",
+            "assets/test-animation/attack14.png",
+            "assets/test-animation/attack15.png"
+          ],
+          "fps": 10,
+          "loop": false,
+          "impact_frame": 11,
+          "canvas_offset": [
+            38,
+            -2
+          ],
+          "source_size": [
+            1920,
+            1080
+          ]
+        },
+        "heavy": {
+          "frames": [
+            "assets/test-animation/attack1.png",
+            "assets/test-animation/attack2.png",
+            "assets/test-animation/attack3.png",
+            "assets/test-animation/attack4.png",
+            "assets/test-animation/attack5.png",
+            "assets/test-animation/attack6.png",
+            "assets/test-animation/attack7.png",
+            "assets/test-animation/attack8.png",
+            "assets/test-animation/attack9.png",
+            "assets/test-animation/attack11.png",
+            "assets/test-animation/attack12-heavy.png",
+            "assets/test-animation/attack13-heavy.png",
+            "assets/test-animation/attack14.png",
+            "assets/test-animation/attack15.png"
+          ],
+          "fps": 10,
+          "loop": false,
+          "impact_frame": 10,
+          "canvas_offset": [
+            38,
+            -2
+          ],
+          "source_size": [
+            1920,
+            1080
+          ]
+        }
+      },
       "shadow": {
         "size": [
           160,
           42
         ],
         "offset": [
-          0,
-          0
+          -3,
+          -21
         ],
-        "opacity": 100
-      }
+        "opacity": 35,
+        "enabled": true,
+        "mode": "frame",
+        "width": 0.75,
+        "depth": 0.3,
+        "ground": [
+          0.29,
+          0.773
+        ],
+        "crop": [
+          0.17,
+          0.24,
+          0.24,
+          0.54
+        ],
+        "angle": -55,
+        "foot_locked": true
+      },
+      "procedural_motion": false,
+      "placeholder_projectile": false
     },
     "opponent": {
       "path": "assets/enemies/stage_01.png",

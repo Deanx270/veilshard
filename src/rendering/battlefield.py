@@ -69,8 +69,8 @@ class Battlefield:
             if effect.kind == "damage":
                 self.actors[target].trigger("hit")
                 heavy=action in ("heavy","special")
-                self.camera.impact(1.55 if heavy else 0.65)
-                self.reactions[target]=(0.30, 22 if heavy else 11)
+                self.camera.impact(2.2 if heavy else 1.1)
+                self.reactions[target]=(0.30, 36 if heavy else 19)
 
     def update(self, dt: float):
         self.camera.update(dt)
@@ -83,13 +83,15 @@ class Battlefield:
         ground_offset=self.background.actor_offset if self.parallax else (0,0)
         for key in sorted(self.actors,key=lambda key:self.actors[key].order):
             offset=(0,0)
-            if self.motion and self.motion.source==key: offset=self.motion.offset()
-            if key in self.reactions:
+            procedural_motion = self.actors[key].spec.get("procedural_motion", True)
+            if procedural_motion and self.motion and self.motion.source==key: offset=self.motion.offset()
+            if procedural_motion and key in self.reactions:
                 t,power=self.reactions[key]
                 offset=((1 if key=="opponent" else -1)*power*math.sin(math.pi*t/0.30),0)
             self.actors[key].draw(self.world,tuple(offset[i]+ground_offset[i] for i in range(2)))
         self.background.draw(self.world, time, foreground=True)
-        if self.motion and self.motion.active and self.motion.kind in ("attack","heavy","special"):
+        if (self.motion and self.motion.active and self.motion.kind in ("attack","heavy","special")
+                and self.actors[self.motion.source].spec.get("placeholder_projectile", True)):
             t=(self.motion.elapsed-(self.motion.impact-0.08))/0.08
             if 0<=t<1:
                 source=self.actors[self.motion.source].spec
@@ -101,7 +103,7 @@ class Battlefield:
                 head=tuple(start[i]+(end[i]-start[i])*t for i in range(2))
                 tail=tuple(start[i]+(end[i]-start[i])*max(0,t-0.18) for i in range(2))
                 heavy=self.motion.kind in ("heavy","special")
-                pygame.draw.line(self.world,(219,167,244) if heavy else (251,204,139),tail,head,7 if heavy else 3)
+                pygame.draw.line(self.world,(219,167,244) if heavy else (251,204,139),tail,head,11 if heavy else 5)
                 x,y=head
                 pygame.draw.polygon(self.world,(255,235,208),[(x-9,y),(x,y-5),(x+9,y),(x,y+5)])
         if self.parallax:

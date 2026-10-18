@@ -25,7 +25,7 @@ class ParallaxBackground:
             image_path=path.parent/entry
             if image_path.exists():
                 with image_path.open("rb") as file: header=file.read(24)
-                if header[:8]!=b"\x89PNG\r\n\x1a\n" or struct.unpack(">II",header[16:24])!=tuple(expanded):
+                if header[:8]!=b"\x89PNG\r\n\x1a\n" or (entry!=source["expanded_master"] and struct.unpack(">II",header[16:24])!=tuple(expanded)):
                     raise ValueError(f"{entry}: expected aligned PNG canvas {expanded}")
         self.master=assets.image(str(path.parent/source["expanded_master"]),self.size)
         if self.master is not None: self.master=self.master.convert()

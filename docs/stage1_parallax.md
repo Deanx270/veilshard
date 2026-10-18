@@ -6,7 +6,7 @@ Muse Spark's supplied assets are stored together under `assets/backgrounds/stage
 
 The manifest defines a 2304×1296 canvas with a 1920×1080 original view at (192,108). Assets are scaled once by 1600/1920, yielding a 1920×1080 overscan surface with a (160,90) inset around the game's 1600×900 viewport. At neutral zoom/pan the exact central viewport is presented, rather than squeezing the expanded canvas into the game window. Zoom-out uses the extra border before cropping, so it does not expose an empty letterbox inside the battlefield.
 
-All PNG dimensions are checked against the manifest. Render order follows render_order; z_index is the fallback. Layer factors, default positions, movement bounds (40 horizontal / 25 vertical source pixels), jitter (6 source pixels), zoom range (0.95–1.15), and zoom pivot come from the manifest. No runtime Blender dependency exists.
+Gameplay-layer PNG dimensions are checked against the manifest. The comparison-only master may use a different resolution and is scaled to the expanded canvas; use the same framing/aspect ratio for a faithful comparison. Render order follows render_order; z_index is the fallback. Layer factors, default positions, movement bounds (40 horizontal / 25 vertical source pixels), jitter (6 source pixels), zoom range (0.95–1.15), and zoom pivot come from the manifest. No runtime Blender dependency exists.
 
 ## Composition and camera
 

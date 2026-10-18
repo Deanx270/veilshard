@@ -25,10 +25,10 @@ def test_center_crop_master_and_static_idle(app):
     frame=pygame.Surface((1600,900)); app.battlefield.camera.present(expanded,frame)
     expected=bg.master.subsurface((160,90,1600,900))
     assert pygame.image.tobytes(frame,"RGB")==pygame.image.tobytes(expected,"RGB")
-    bg.compare=False; app.draw(); before=pygame.image.tobytes(app.canvas,"RGB")
-    app.update(1); app.draw()
+    bg.compare=False; bg.draw(expanded); before=pygame.image.tobytes(expanded,"RGB")
+    app.update(1); bg.draw(expanded)
     assert app.background.shift==(0,0)
-    assert pygame.image.tobytes(app.canvas,"RGB")==before
+    assert pygame.image.tobytes(expanded,"RGB")==before
 
 
 def test_depth_camera_and_screen_anchored_hud(app):
@@ -66,7 +66,9 @@ def test_foreground_occludes_sprite_and_master_skips_overlay(app):
     point=next((x,y) for y in range(750,980,8) for x in range(180,1700,8) if front.get_at((x,y)).a>=250)
     world=pygame.Surface(bg.size); world.fill((255,0,255))
     bg.draw(world,foreground=True)
-    assert all(abs(a-b)<=3 for a,b in zip(world.get_at(point)[:3],front.get_at(point)[:3]))
+    expected=pygame.Surface((1,1));expected.fill((255,0,255))
+    expected.blit(front,(0,0),pygame.Rect(point,(1,1)))
+    assert world.get_at(point)==expected.get_at((0,0))
     bg.compare=True; world.fill((255,0,255)); bg.draw(world,foreground=True)
     assert world.get_at(point)[:3]==(255,0,255)
 

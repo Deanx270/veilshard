@@ -1,4 +1,5 @@
 import pygame
+from src.rendering.frame_shadow import FrameShadows
 
 def placeholder(size, accent, enemy=False, beast=False):
     """Original graphic silhouettes; replace via stage character PNG paths."""
@@ -50,6 +51,14 @@ class CharacterSprite:
             frames = [frame for frame in frames if frame is not None]
             if frames:
                 self.clips[name] = (frames, max(0.1, clip.get("fps", 8)), clip.get("loop", name == "idle"))
+        # Static clip registration corrects differences in exported canvas origin.
+        # It never follows the changing silhouette or adds animated displacement.
+        self.clip_offsets = {}
+        for name in self.clips:
+            config = spec.get("animations", {}).get(name, {})
+            source_size = config.get("source_size", self.size)
+            offset = config.get("canvas_offset", [0, 0])
+            self.clip_offsets[name] = tuple(round(offset[i] * self.size[i] / source_size[i]) for i in range(2))
         self.flashes = {}
         for name, (frames, fps, loop) in self.clips.items():
             frames = [pygame.transform.flip(f, True, False) if spec.get("flip_x", False) else f for f in frames]
@@ -67,6 +76,7 @@ class CharacterSprite:
         if self.shadow is None:
             self.shadow = pygame.Surface(shadow_size, pygame.SRCALPHA)
             pygame.draw.ellipse(self.shadow, (5, 8, 18, shadow.get("opacity", 100)), self.shadow.get_rect())
+        self.frame_shadows = FrameShadows([frame for frames, _, _ in self.clips.values() for frame in frames], shadow) if shadow.get("mode") in ("frame", "contact") else None
         self.state = "idle"
         self.elapsed = 0.0
         self.hit_time = 0.0
@@ -75,9 +85,20 @@ class CharacterSprite:
     def order(self):
         return self.spec.get("render_order", self.spec["position"][1])
 
+    def action_timing(self, state: str):
+        """Use exported clip timing only when every configured frame loaded."""
+        config = self.spec.get("animations", {}).get(state, {})
+        if "impact_frame" not in config or state not in self.clips:
+            return None
+        frames, fps, loop = self.clips[state]
+        if len(frames) != len(config.get("frames", [])):
+            return None
+        index = max(1, min(len(frames)-1, config["impact_frame"]))
+        return index / fps, len(frames) / fps
+
     def trigger(self, state: str):
         if state == "hit":
-            self.hit_time = 0.18
+            self.hit_time = 0.20
         if state in self.clips:
             self.state = state
             self.elapsed = 0.0
@@ -90,11 +111,15 @@ class CharacterSprite:
             self.state = "idle"
             self.elapsed = 0.0
 
-    def frame(self):
+    def frame_index(self):
         frames, fps, loop = self.clips[self.state]
         index = int(self.elapsed * fps)
         index = index % len(frames) if loop else min(index, len(frames)-1)
-        return self.flashes[self.state][index] if self.hit_time > 0 else frames[index]
+        return index
+
+    def frame(self):
+        index = self.frame_index()
+        return self.flashes[self.state][index] if self.hit_time > 0 else self.clips[self.state][0][index]
 
     def draw(self, surface, displacement=(0,0)):
 
@@ -102,8 +127,14 @@ class CharacterSprite:
         anchor = self.spec.get("anchor", [0.5, 1.0])
         shadow = self.spec.get("shadow", {})
         offset = shadow.get("offset", [0, 0])
-        if shadow.get("enabled", True):
+        if not self.frame_shadows and shadow.get("enabled", True):
             rect = self.shadow.get_rect(center=(round(pos[0]+offset[0]), round(pos[1]+offset[1])))
             surface.blit(self.shadow, rect)
         frame = self.frame()
-        surface.blit(frame, (round(pos[0]-frame.get_width()*anchor[0]), round(pos[1]-frame.get_height()*anchor[1])))
+        registration = self.clip_offsets.get(self.state, (0, 0))
+        top_left = (round(pos[0]-frame.get_width()*anchor[0])+registration[0],
+                    round(pos[1]-frame.get_height()*anchor[1])+registration[1])
+        if self.frame_shadows:
+            shadow_origin = tuple(top_left[i]-registration[i] for i in range(2)) if shadow.get("mode") == "contact" else top_left
+            self.frame_shadows.draw(surface, self.clips[self.state][0][self.frame_index()], shadow_origin)
+        surface.blit(frame, top_left)

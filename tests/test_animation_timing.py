@@ -69,7 +69,7 @@ def test_menu_cancels_pending_action(app):
 
 def test_lethal_action_never_allows_retaliation(app):
     b=set_card(app,"attack"); b.enemy.hp=1
-    click_card(app); app.update(.23)
+    click_card(app); app.update(app.timeline.impact+.01)
     assert b.status=="won" and app.campaign.scene=="battle"
     for _ in range(20): app.action("end")
     app.update(1)
@@ -92,6 +92,6 @@ def test_long_frame_and_strength(app):
     assert not t.start("attack","player",lambda:calls.append(2))
     t.update(10); t.update(10)
     assert calls==[1] and not t.active
-    b=set_card(app,"heavy"); click_card(app); app.update(.35)
+    b=set_card(app,"heavy"); click_card(app); app.update(app.timeline.impact+.01)
     assert app.battlefield.camera.strength>1
     assert len(app.effects.bursts[-1]["particles"])==14

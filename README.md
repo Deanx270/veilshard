@@ -1,4 +1,4 @@
-# Veilshard â€” Fractured Oath
+# Veilshard — Fractured Oath
 
 A single-player, anime-inspired low-poly 2.5D turn-based card RPG prototype made with Python and Pygame Community Edition. Recover five fragments through Ember Forest, Frozen Ruins, Storm Tower, Corrupted Grove, and Shattered Citadel.
 
@@ -21,7 +21,7 @@ On macOS/Linux, use `.venv/bin/python` in place of `.\.venv\Scripts\python`. No 
 - Each turn gives 2 energy and 3 cards. Click **End turn** to execute the displayed enemy intent.
 - Press **Escape** in combat to pause/resume. The pause menu can return to the main menu.
 - Retry the current stage after defeat. HP and the starting deck reset for each stage.
-- Resize the window freely; the 1600Ã—900 canvas is letterboxed with corrected mouse coordinates.
+- Resize the window freely; the 1600×900 canvas is letterboxed with corrected mouse coordinates.
 
 ## Implemented
 
@@ -36,7 +36,7 @@ Pure Python combat is separate from rendering. JSON defines cards, stage layouts
 .\.venv\Scripts\python main.py --headless --frames 120
 ```
 
-Tests cover combat invariants, all enemy actions, deck recycling, campaign outcomes, ten seeded full campaign playthroughs, navigation/clicks/pause, resizing math, rendering every scene, and 1920Ã—1080 PNG/frame-sequence imports using SDL dummy drivers.
+Tests cover combat invariants, all enemy actions, deck recycling, campaign outcomes, ten seeded full campaign playthroughs, navigation/clicks/pause, resizing math, rendering every scene, and 1920×1080 PNG/frame-sequence imports using SDL dummy drivers.
 
 ## Structure
 
