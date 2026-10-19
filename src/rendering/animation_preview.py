@@ -17,9 +17,12 @@ class AnimationPreview:
         self.spec = copy.deepcopy(original.spec)
         self.spec["anchor"] = [0.5, 1.0]
         self.stage_id = stage_id
-        self.paths = sorted((folder or resource("assets/test-animation")).glob("*.png"), key=filename_order)
+        target_dir = folder or resource("assets/characters/char_01")
+        if not target_dir.exists():
+            target_dir = resource("assets/test-animation")
+        self.paths = sorted(target_dir.glob("**/*.png") if target_dir.is_dir() else [], key=filename_order)
         if not self.paths:
-            raise ValueError("No PNG frames in assets/test-animation")
+            raise ValueError(f"No PNG frames in {target_dir}")
         self.sources = [pygame.image.load(str(path)).convert_alpha() for path in self.paths]
         self.height = round(original.size[1])
         self.frames = []

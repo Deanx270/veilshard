@@ -1,6 +1,6 @@
 # Animation placement preview
 
-Enter a battle and click **Test animation (F6)**, or press F6. The tool temporarily replaces the player with PNGs from `assets/test-animation`. All frames play in natural filename order (attack1, attack2, ... attack10; heavy variants are included). Space or Play restarts the whole sequence at 12 FPS by default; playback stops on the final frame. FPS buttons adjust playback speed.
+Enter a battle and click **Test animation (F6)**, or press F6. The tool temporarily replaces the player with PNGs from `assets/characters/char_01` (or fallback). All frames play in natural filename order (attack1, attack2, ... attack10; heavy variants are included). Space or Play restarts the whole sequence at 12 FPS by default; playback stops on the final frame. FPS buttons adjust playback speed.
 
 - Arrow keys move the image anchor by 10 logical pixels per press; Shift+arrow moves by 1.
 - Size +/- buttons or +/- keys resize by 5%, retaining each source image's aspect ratio.
