@@ -12,13 +12,17 @@ class Camera:
         self.impact_zoom = max(0.0, min(0.12, config.get("impact_zoom", 0.035)))
         self.focus = config.get("focus", [800, 430])
         self.remaining = 0.0
+        self.duration = 0.28
         self.clock = 0.0
         self.buffer = None
         self.strength = 1.0
+        self.direction = 1
 
-    def impact(self, strength=1.0):
+    def impact(self, strength=1.0, direction=1):
         self.strength=strength
-        self.remaining = 0.28
+        self.direction=direction
+        self.duration = 0.42 if strength > 1.5 else 0.28
+        self.remaining = self.duration
 
     def update(self, dt: float):
         self.clock += dt
@@ -26,7 +30,9 @@ class Camera:
 
     @property
     def zoom(self):
-        return self.base_zoom + self.impact_zoom * self.strength * math.sin(math.pi*self.remaining/0.28)
+        decay = self.remaining / max(0.001, self.duration)
+        zoom_mult = 1.6 if self.strength > 1.5 else 1.0
+        return self.base_zoom + self.impact_zoom * self.strength * zoom_mult * math.sin(math.pi * decay)
 
     def present(self, world, destination):
         zoom = self.zoom
@@ -67,9 +73,11 @@ class Battlefield:
         for effect in effects:
             target = "player" if effect.target == "player" else "opponent"
             if effect.kind == "damage":
-                self.actors[target].trigger("hit")
                 heavy=action in ("heavy","special")
-                self.camera.impact(2.2 if heavy else 1.1)
+                hit_state = "hit_heavy" if heavy and ("hit_heavy" in self.actors[target].clips or "hurt_heavy" in self.actors[target].clips) else "hit"
+                self.actors[target].trigger(hit_state)
+                direction = 1 if target == "opponent" else -1
+                self.camera.impact(2.4 if heavy else 1.1, direction=direction)
                 self.reactions[target]=(0.30, 36 if heavy else 19)
 
     def update(self, dt: float):

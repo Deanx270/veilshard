@@ -51,6 +51,18 @@ class CharacterSprite:
             frames = [frame for frame in frames if frame is not None]
             if frames:
                 self.clips[name] = (frames, max(0.1, clip.get("fps", 8)), clip.get("loop", name == "idle"))
+        if "hit" in self.clips and "hurt" not in self.clips:
+            self.clips["hurt"] = self.clips["hit"]
+        if "hit_heavy" in self.clips and "hurt_heavy" not in self.clips:
+            self.clips["hurt_heavy"] = self.clips["hit_heavy"]
+        if "hurt" in self.clips and "hit" not in self.clips:
+            self.clips["hit"] = self.clips["hurt"]
+        if "hurt_heavy" in self.clips and "hit_heavy" not in self.clips:
+            self.clips["hit_heavy"] = self.clips["hurt_heavy"]
+        if "defend" in self.clips and "block" not in self.clips:
+            self.clips["block"] = self.clips["defend"]
+        if "block" in self.clips and "defend" not in self.clips:
+            self.clips["defend"] = self.clips["block"]
         # Static clip registration corrects differences in exported canvas origin.
         # It never follows the changing silhouette or adds animated displacement.
         self.clip_offsets = {}
@@ -97,10 +109,19 @@ class CharacterSprite:
         return index / fps, len(frames) / fps
 
     def trigger(self, state: str):
-        if state == "hit":
+        if state in ("hit", "hit_heavy", "hurt", "hurt_heavy") or state.startswith("hit") or state.startswith("hurt"):
             self.hit_time = 0.20
-        if state in self.clips:
-            self.state = state
+        clip = state
+        if clip not in self.clips:
+            if state in ("hit", "hurt"):
+                clip = "hit" if "hit" in self.clips else ("hurt" if "hurt" in self.clips else state)
+            elif state in ("hit_heavy", "heavy_hit", "hurt_heavy", "heavy_hurt"):
+                for candidate in ("hit_heavy", "hurt_heavy", "hit", "hurt"):
+                    if candidate in self.clips:
+                        clip = candidate
+                        break
+        if clip in self.clips:
+            self.state = clip
             self.elapsed = 0.0
 
     def update(self, dt: float):

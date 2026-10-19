@@ -79,9 +79,9 @@ def test_lethal_action_never_allows_retaliation(app):
 @pytest.mark.parametrize("kind,effect",[("shield","block"),("heal","heal")])
 def test_support_effect_timing(app,kind,effect):
     b=set_card(app,kind); b.player.hp=20
-    click_card(app); app.update(.1)
+    click_card(app); app.update(app.timeline.impact-.05)
     assert b.player.hp==20 and b.player.block==0
-    app.update(.13)
+    app.update(.06)
     assert app.effects.bursts[-1]["kind"]==effect
     assert b.player.block==6 if kind=="shield" else b.player.hp==26
     assert app.battlefield.camera.remaining==0

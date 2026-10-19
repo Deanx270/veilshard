@@ -117,7 +117,7 @@ def test_exported_actor_keeps_anchor_during_actions_and_hits(app, monkeypatch):
 def test_attack_canvas_registration_is_fixed_and_matches_idle(app):
     actor = app.battlefield.actors["player"]
     idle = actor.clips["idle"][0][0].get_bounding_rect(min_alpha=100)
-    for kind in ("attack", "heavy"):
+    for kind in ("attack", "heavy", "heal"):
         first = actor.clips[kind][0][0].get_bounding_rect(min_alpha=100)
         offset = actor.clip_offsets[kind]
         assert abs(first.left + offset[0] - idle.left) <= 1
@@ -219,3 +219,95 @@ def test_grounded_shadow_tracks_feet_without_rotating_them_away():
             # Both feet retain contact despite changes in pose/direction.
             for x in (55+dx,84+dx):
                 assert any(canvas.get_at((50+x,50+140+dy+d)).a>20 for d in range(-4,5))
+
+
+def test_stage_one_hurt_animation_and_exclusions(app):
+    from src.combat.battle import Effect
+    actor = app.battlefield.actors["player"]
+    clips = actor.spec["animations"]
+    hit_frames = [path.split("/")[-1] for path in clips["hit"]["frames"]]
+    hit_heavy_frames = [path.split("/")[-1] for path in clips["hit_heavy"]["frames"]]
+
+    # Normal attack exclusions: hurt1, 5, 6, 7, 8, 9, 10, 12, 14
+    assert len(hit_frames) == 7
+    assert hit_frames == ["hurt2.png", "hurt3.png", "hurt4.png", "hurt11.png", "hurt13.png", "hurt15.png", "hurt16.png"]
+    assert not any(f in hit_frames for f in ("hurt1.png", "hurt5.png", "hurt6.png", "hurt7.png", "hurt8.png", "hurt9.png", "hurt10.png", "hurt12.png", "hurt14.png"))
+
+    # Heavy attack exclusions: hurt2, 4
+    assert len(hit_heavy_frames) == 14
+    assert hit_heavy_frames == ["hurt1.png", "hurt3.png", "hurt5.png", "hurt6.png", "hurt7.png", "hurt8.png", "hurt9.png", "hurt10.png", "hurt11.png", "hurt12.png", "hurt13.png", "hurt14.png", "hurt15.png", "hurt16.png"]
+    assert "hurt2.png" not in hit_heavy_frames and "hurt4.png" not in hit_heavy_frames
+
+    # Triggering and auto-return to idle
+    actor.trigger("hit")
+    assert actor.state in ("hit", "hurt") and actor.hit_time > 0
+    actor.update(0.71)
+    assert actor.state == "idle" and actor.spec["position"] == [741, 939]
+
+    actor.trigger("hit_heavy")
+    assert actor.state in ("hit_heavy", "hurt_heavy") and actor.hit_time > 0
+    actor.update(1.41)
+    assert actor.state == "idle" and actor.spec["position"] == [741, 939]
+
+    # Feedback triggers appropriate clip without procedural knockback
+    field = app.battlefield
+    field.feedback([Effect("player", "damage", 5)], "opponent", "attack")
+    assert actor.state in ("hit", "hurt")
+    assert actor.spec["position"] == [741, 939]
+
+    field.feedback([Effect("player", "damage", 12)], "opponent", "special")
+    assert actor.state in ("hit_heavy", "hurt_heavy")
+    assert actor.spec["position"] == [741, 939]
+
+
+def test_stage_one_defend_animation(app):
+    actor = app.battlefield.actors["player"]
+    clips = actor.spec["animations"]
+    assert "defend" in clips
+    defend_frames = [path.split("/")[-1] for path in clips["defend"]["frames"]]
+    assert len(defend_frames) == 15
+    assert defend_frames == [f"defend{i}.png" for i in range(1, 16)]
+    assert clips["defend"]["impact_frame"] == 6
+
+    # Test playing shield card triggers defend animation
+    b = app.campaign.battle
+    b.energy = 2
+    b.player.block = 0
+    b.deck.hand = [next(c for c in app.campaign.cards if c.category == "block")]
+    app.begin_action("block", "player", lambda: b.play(0))
+    assert actor.state in ("defend", "block")
+    impact = app.timeline.impact
+    app.update(impact - .01)
+    assert b.player.block == 0
+    app.update(.02)
+    assert b.player.block == 6
+    assert actor.frame() is actor.clips["defend"][0][6]
+    app.update(app.timeline.remaining + .01)
+    assert not app.lock and actor.state == "idle" and actor.spec["position"] == [741, 939]
+
+
+def test_stage_one_heal_animation(app):
+    actor = app.battlefield.actors["player"]
+    clips = actor.spec["animations"]
+    assert "heal" in clips
+    heal_frames = [path.split("/")[-1] for path in clips["heal"]["frames"]]
+    assert len(heal_frames) == 14
+    assert heal_frames == [f"heal{i}.png" for i in range(1, 15)]
+    assert clips["heal"]["impact_frame"] == 7
+    assert clips["heal"]["canvas_offset"] == [12, -57]
+
+    # Test playing heal card triggers heal animation and resolves at impact
+    b = app.campaign.battle
+    b.energy = 2
+    b.player.hp = 20
+    b.deck.hand = [next(c for c in app.campaign.cards if c.category == "heal")]
+    app.begin_action("heal", "player", lambda: b.play(0))
+    assert actor.state == "heal"
+    impact = app.timeline.impact
+    app.update(impact - .01)
+    assert b.player.hp == 20
+    app.update(.02)
+    assert b.player.hp == 26
+    assert actor.frame() is actor.clips["heal"][0][7]
+    app.update(app.timeline.remaining + .01)
+    assert not app.lock and actor.state == "idle" and actor.spec["position"] == [741, 939]

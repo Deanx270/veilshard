@@ -88,7 +88,8 @@ class ParallaxCamera:
         self.current_zoom=self.base_zoom
         self.impact_zoom=self.options.get("impact_zoom",config.get("impact_zoom",0.035))
         self.target=[0.0,0.0]; self.pan=[0.0,0.0]
-        self.clock=0.0; self.remaining=0.0; self.strength=1.0
+        self.clock=0.0; self.remaining=0.0; self.duration=0.28; self.strength=1.0
+        self.direction=1
         self.buffer=None
         self.debug=False
         # Respect overscan even if artists increase the requested pan range.
@@ -103,13 +104,17 @@ class ParallaxCamera:
             safe[axis]=max(0,margin/background.scale/max(factor,0.001)-self.jitter-offsets-2)
         self.limits={axis:min(abs(self.limits[axis]),safe[axis]) for axis in ("x","y")}
 
-    def impact(self,strength=1.0):
-        self.remaining=0.28; self.strength=strength
+    def impact(self,strength=1.0,direction=1):
+        self.strength=strength
+        self.direction=direction
+        self.duration=0.42 if strength>1.5 else 0.28
+        self.remaining=self.duration
 
     def reset(self):
         self.target=[0.0,0.0]; self.pan=[0.0,0.0]
         self.current_zoom=self.target_zoom=self.base_zoom
-        self.remaining=0.0; self.background.shift=(0,0)
+        self.remaining=0.0; self.duration=0.28; self.strength=1.0; self.direction=1
+        self.background.shift=(0,0)
 
     def debug_key(self,key):
         if not self.options.get("debug_controls",False): return False
@@ -133,17 +138,23 @@ class ParallaxCamera:
             goal=max(-self.limits[axis],min(self.limits[axis],self.target[i]))
             self.pan[i]+=(goal-self.pan[i])*ease
         self.current_zoom+=(self.target_zoom-self.current_zoom)*ease
-        decay=self.remaining/0.28
+        decay=self.remaining/max(0.001,self.duration)
         shift=[]
+        heavy=self.strength>1.5
+        base_pan=self.options.get("impact_pan",8)
+        kick_mult=(self.strength*1.3) if heavy else self.strength
+        pulse=math.sin(math.pi*decay)-(0.22*math.sin(2*math.pi*decay) if heavy else 0.0)
         for i,axis in enumerate(("x","y")):
-            kick=math.sin(math.pi*decay)*self.options.get("impact_pan",8)*(1 if i==0 else 0.35)
-            shake=math.sin(self.clock*(95 if i==0 else 81))*min(self.jitter,self.jitter*self.strength)*decay
+            kick=pulse*base_pan*kick_mult*(self.direction if i==0 else -0.35)
+            shake=math.sin(self.clock*(95 if i==0 else 81))*min(self.jitter,self.jitter*(self.strength if not heavy else 1.0))*decay
             shift.append(max(-self.limits[axis]-self.jitter,min(self.limits[axis]+self.jitter,self.pan[i]+kick+shake)))
         self.background.shift=tuple(shift)
 
     @property
     def zoom(self):
-        return max(self.zoom_range[0],min(self.zoom_range[1],self.current_zoom+self.impact_zoom*self.strength*math.sin(math.pi*self.remaining/0.28)))
+        decay=self.remaining/max(0.001,self.duration)
+        zoom_mult=1.6 if self.strength>1.5 else 1.0
+        return max(self.zoom_range[0],min(self.zoom_range[1],self.current_zoom+self.impact_zoom*self.strength*zoom_mult*math.sin(math.pi*decay)))
 
     def present(self,world,destination):
         # Zoom the overscanned composite, not the already cropped viewport.

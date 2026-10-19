@@ -1,6 +1,7 @@
 """Compact floating overlays, with no reserved battlefield region."""
 import pygame
 import math
+from src.core.resources import resource
 from src.ui.widgets import INK, MUTED
 
 GOLD=(204,182,139)
@@ -34,14 +35,72 @@ class BattleHUD:
         self.display_hp={}
         self.end=CircleTarget((1450,786),70)
         self.pause=CircleTarget((1510,52),28)
-        # Small original portrait, independent of full-height battle sprites.
-        self.portrait=pygame.Surface((112,130),pygame.SRCALPHA)
-        p=self.portrait
-        pygame.draw.polygon(p,(22,29,44,220),[(56,0),(112,65),(56,130),(0,65)])
-        pygame.draw.polygon(p,GOLD,[(56,2),(110,65),(56,128),(2,65)],2)
-        pygame.draw.polygon(p,(88,106,154),[(56,71),(22,99),(56,122),(90,99)])
-        pygame.draw.polygon(p,(226,204,199),[(32,44),(58,30),(81,46),(73,77),(55,91),(36,73)])
-        pygame.draw.polygon(p,(206,215,237),[(23,66),(26,31),(56,15),(86,37),(89,73),(72,50),(60,42),(45,63),(43,43)])
+        self.portrait=self._build_portrait()
+
+    def _build_portrait(self):
+        dw,dh=124,144
+        cx,cy=dw//2,dh//2
+        pad_top=24
+        pad_side=16
+        surf_w=dw+pad_side*2
+        surf_h=dh+pad_top+8
+
+        portrait=pygame.Surface((surf_w,surf_h),pygame.SRCALPHA)
+        dx0=pad_side
+        dy0=pad_top
+        diamond_poly=[
+            (dx0+cx,dy0),
+            (dx0+dw,dy0+cy),
+            (dx0+cx,dy0+dh),
+            (dx0,dy0+cy)
+        ]
+
+        # Background fill
+        pygame.draw.polygon(portrait,(22,29,44,230),diamond_poly)
+        # Upper diamond frame behind hair
+        pygame.draw.lines(portrait,GOLD,False,[diamond_poly[3],diamond_poly[0],diamond_poly[1]],2)
+
+        loaded=False
+        try:
+            icon_path=resource("assets/characters/icon_char_01_default.png")
+            if icon_path.exists():
+                icon_raw=pygame.image.load(str(icon_path)).convert_alpha()
+                sw=int(dw*1.16)
+                sh=sw
+                scaled=pygame.transform.smoothscale(icon_raw,(sw,sh))
+                ix=dx0+cx-int(sw*0.5)
+                iy=dy0+cy-int(sh*0.49)
+
+                char_layer=pygame.Surface((surf_w,surf_h),pygame.SRCALPHA)
+                char_layer.blit(scaled,(ix,iy))
+
+                mask=pygame.Surface((surf_w,surf_h),pygame.SRCALPHA)
+                # Top half allows the head/hair to override the diamond
+                pygame.draw.rect(mask,(255,255,255,255),(0,0,surf_w,dy0+cy))
+                # Bottom half clips strictly within the lower diamond so it won't overlap the bottom half
+                lower_tri=[
+                    (dx0+2,dy0+cy),
+                    (dx0+dw-2,dy0+cy),
+                    (dx0+cx,dy0+dh-3)
+                ]
+                pygame.draw.polygon(mask,(255,255,255,255),lower_tri)
+                char_layer.blit(mask,(0,0),special_flags=pygame.BLEND_RGBA_MIN)
+                portrait.blit(char_layer,(0,0))
+                loaded=True
+        except Exception:
+            loaded=False
+
+        if not loaded:
+            # Fallback procedural placeholder
+            pygame.draw.polygon(portrait,(88,106,154),[(dx0+cx,dy0+78),(dx0+24,dy0+109),(dx0+cx,dy0+135),(dx0+100,dy0+109)])
+            pygame.draw.polygon(portrait,(226,204,199),[(dx0+35,dy0+49),(dx0+64,dy0+33),(dx0+90,dy0+51),(dx0+81,dy0+85),(dx0+61,dy0+101),(dx0+40,dy0+81)])
+            pygame.draw.polygon(portrait,(206,215,237),[(dx0+25,dy0+73),(dx0+29,dy0+34),(dx0+62,dy0+17),(dx0+95,dy0+41),(dx0+98,dy0+81),(dx0+80,dy0+55),(dx0+66,dy0+47),(dx0+50,dy0+70),(dx0+47,dy0+47)])
+
+        # Crisp gold frame on the bottom half of the diamond (never overlapped by the character image)
+        pygame.draw.lines(portrait,GOLD,False,[diamond_poly[3],diamond_poly[2],diamond_poly[1]],2)
+        pygame.draw.lines(portrait,(140,120,85),False,[(dx0+4,dy0+cy),(dx0+cx,dy0+dh-4),(dx0+dw-4,dy0+cy)],1)
+
+        return portrait
 
     def reset(self,battle):
         self.display_hp={"player":float(battle.player.hp),"enemy":float(battle.enemy.hp)}
@@ -65,19 +124,22 @@ class BattleHUD:
         pygame.draw.circle(s,(31,32,45),self.pause.center,28)
         pygame.draw.circle(s,pause_color,self.pause.center,28,1)
         for x in (1502,1514): pygame.draw.rect(s,pause_color,(x,42,4,20))
-        # Compact bottom-left status. No full-width fill or reserved viewport.
-        glass(s,(40,722,335,142),130)
-        s.blit(self.portrait,(28,723))
-        ui.text(s,"THE DUELIST",(155,728),17,GOLD)
-        ui.text(s,f"{b.player.hp} / {b.player.max_hp} HP",(155,755),23)
-        bar(s,(156,791,205,13),self.display_hp.get("player",b.player.hp),b.player.max_hp,(125,208,160))
+        # Player status panel: slightly wider, proportionally enlarged elements, clear of card fan.
+        gx,gy,gw,gh=38,712,396,154
+        glass(s,(gx,gy,gw,gh),130)
+        s.blit(self.portrait,(gx-26,gy-20))
+        content_x=gx+124
+        ui.text(s,"THE QUIET CODEX",(content_x,gy+12),18,GOLD)
+        ui.text(s,f"{b.player.hp} / {b.player.max_hp} HP",(content_x,gy+38),26)
+        bar(s,(content_x,gy+74,242,15),self.display_hp.get("player",b.player.hp),b.player.max_hp,(125,208,160))
         for i in range(2):
-            x=165+i*26
+            ex=content_x+10+i*28
+            ey=gy+106
             color=(173,204,255) if i<b.energy else (68,74,91)
-            pygame.draw.polygon(s,color,[(x,818),(x+9,827),(x,836),(x-9,827)],0 if i<b.energy else 1)
-        ui.text(s,f"{b.energy}/2 ENERGY",(220,814),16,(191,208,239))
-        if b.player.block: ui.text(s,f"◇ BLOCK {b.player.block}",(155,695),19,(151,207,248))
-        ui.text(s,f"Draw {len(b.deck.draw_pile)}   ·   Discard {len(b.deck.discard)}",(153,847),15,MUTED)
+            pygame.draw.polygon(s,color,[(ex,ey-9),(ex+9,ey),(ex,ey+9),(ex-9,ey)],0 if i<b.energy else 1)
+        ui.text(s,f"{b.energy}/2 ENERGY",(content_x+70,gy+96),17,(191,208,239))
+        if b.player.block: ui.text(s,f"◇ BLOCK {b.player.block}",(content_x,gy-26),20,(151,207,248))
+        ui.text(s,f"Draw {len(b.deck.draw_pile)}   ·   Discard {len(b.deck.discard)}",(content_x,gy+126),15,MUTED)
         # Float above the configured sprite's head, clamped to the viewport.
         spec=c.stage['opponent']; height=spec['size'][1]*spec.get('scale',1)
         x=max(570,min(1250,spec['position'][0]-145))
