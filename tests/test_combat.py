@@ -90,15 +90,15 @@ def test_enemy_actions(campaign,kind,amount,expected_hp,block):
 def test_stage_one_enemy_heavy_attack_chance(campaign):
     enemy_def = campaign.stages[0]["enemy"]
     assert enemy_def.get("heavy_chance") == 0.5
-    assert enemy_def.get("heavy_multiplier") == 1.5
+    assert enemy_def.get("heavy_multiplier") == 2.0
     plan = EnemyPlan(enemy_def, random.Random(42))
     intents = [plan.next(28, 28) for _ in range(200)]
     kinds = [it.kind for it in intents]
     assert "attack" in kinds and "heavy" in kinds
     assert 70 <= kinds.count("heavy") <= 130
     heavy_amounts = {it.amount for it in intents if it.kind == "heavy"}
-    assert heavy_amounts == {8, 11}
-    assert Intent("heavy", 11).label == "Heavy Attack  11"
+    assert heavy_amounts == {10, 14}
+    assert Intent("heavy", 14).label == "Heavy Attack  14"
 
 def test_kill_prevents_enemy_action(campaign):
     b=campaign.battle; b.enemy.hp=1; give(campaign,"attack"); b.play(0)
