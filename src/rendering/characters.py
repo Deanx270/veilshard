@@ -66,6 +66,9 @@ class CharacterSprite:
             self.clips["block"] = self.clips["defend"]
         if "block" in self.clips and "defend" not in self.clips:
             self.clips["defend"] = self.clips["block"]
+        lighting = spec.get("lighting", {})
+        if lighting.get("enabled", True) and (lighting.get("ambient") or lighting.get("highlight") or lighting.get("bounce")):
+            self.clips = self._apply_lighting(self.clips, lighting)
         # Static clip registration corrects differences in exported canvas origin.
         # It never follows the changing silhouette or adds animated displacement.
         self.clip_offsets = {}
@@ -95,6 +98,40 @@ class CharacterSprite:
         self.state = "idle"
         self.elapsed = 0.0
         self.hit_time = 0.0
+
+    def _apply_lighting(self, clips: dict, config: dict) -> dict:
+        ambient = config.get("ambient", [255, 255, 255])
+        highlight = config.get("highlight", [0, 0, 0])
+        bounce = config.get("bounce", [0, 0, 0])
+        w, h = self.size
+        ambient_surf = None
+        if list(ambient) != [255, 255, 255]:
+            ambient_surf = pygame.Surface((w, h))
+            ambient_surf.fill(ambient)
+        grad_surf = None
+        if any(highlight) or any(bounce):
+            small = pygame.Surface((1, 64), pygame.SRCALPHA)
+            for y in range(64):
+                sun_f = max(0.0, 1.0 - y / 40.0) ** 1.2
+                bounce_f = max(0.0, (y - 30.0) / 34.0) ** 1.2
+                r = int(min(255, highlight[0] * sun_f + bounce[0] * bounce_f))
+                g = int(min(255, highlight[1] * sun_f + bounce[1] * bounce_f))
+                b = int(min(255, highlight[2] * sun_f + bounce[2] * bounce_f))
+                small.set_at((0, y), (r, g, b, 255))
+            grad_surf = pygame.transform.smoothscale(small, (w, h))
+
+        new_clips = {}
+        for name, (frames, fps, loop) in clips.items():
+            lit_frames = []
+            for frame in frames:
+                lit = frame.copy()
+                if ambient_surf is not None:
+                    lit.blit(ambient_surf, (0, 0), special_flags=pygame.BLEND_RGB_MULT)
+                if grad_surf is not None:
+                    lit.blit(grad_surf, (0, 0), special_flags=pygame.BLEND_RGB_ADD)
+                lit_frames.append(lit)
+            new_clips[name] = (lit_frames, fps, loop)
+        return new_clips
 
     @property
     def order(self):

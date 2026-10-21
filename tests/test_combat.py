@@ -89,10 +89,11 @@ def test_enemy_actions(campaign,kind,amount,expected_hp,block):
 
 def test_stage_one_enemy_heavy_attack_chance(campaign):
     enemy_def = campaign.stages[0]["enemy"]
+    assert enemy_def["hp"] == 40
     assert enemy_def.get("heavy_chance") == 0.5
     assert enemy_def.get("heavy_multiplier") == 2.0
     plan = EnemyPlan(enemy_def, random.Random(42))
-    intents = [plan.next(28, 28) for _ in range(200)]
+    intents = [plan.next(40, 40) for _ in range(200)]
     kinds = [it.kind for it in intents]
     assert "attack" in kinds and "heavy" in kinds
     assert 70 <= kinds.count("heavy") <= 130
@@ -137,23 +138,46 @@ def test_storm_charge_precedes_special(campaign):
     b.end_turn(); assert b.player.hp==30 and b.intent.kind=="special"
 
 def auto_play(b):
-    """Simple public-action policy: prioritize lethal hits, then sustain."""
+    """Simple public-action policy: evaluate valid turn plays to maximize net HP difference."""
+    from itertools import permutations
+    import copy
     for _ in range(100):
-        if b.status!="active": break
-        while b.status=="active":
-            options=[(i,c) for i,c in enumerate(b.deck.hand) if c.cost<=b.energy]
-            if not options: break
-            def score(option):
-                _,c=option
-                if c.category=="attack":
-                    if c.amount>=b.enemy.hp+b.enemy.block: return 100
-                    return c.amount/c.cost
-                if c.category=="heal": return min(c.amount,30-b.player.hp)+1 if b.player.hp<30 else -1
-                damage=b.intent.amount if b.intent.kind in ("attack","heavy","special") else 0
-                return min(c.amount,max(0,damage-b.player.block))+0.5 if damage else -1
-            option=max(options,key=score)
-            if score(option)<0: break
-            b.play(option[0])
+        if b.status != "active": break
+        hand_indices = list(range(len(b.deck.hand)))
+        valid_combos = [()]
+        for r in range(1, len(hand_indices) + 1):
+            for seq in permutations(hand_indices, r):
+                if sum(b.deck.hand[i].cost for i in seq) <= b.energy:
+                    valid_combos.append(seq)
+
+        best_combo = ()
+        best_score = -999999
+        for seq in valid_combos:
+            b_test = copy.deepcopy(b)
+            cards_to_play = [b.deck.hand[i] for i in seq]
+            for card in cards_to_play:
+                c_idx = next(i for i, c in enumerate(b_test.deck.hand) if c.id == card.id)
+                b_test.play(c_idx)
+            if b_test.status == "won":
+                score = 100000
+            elif b_test.player.hp == 0:
+                score = -100000
+            else:
+                damage = b_test.intent.amount if b_test.intent.kind in ("attack", "heavy", "special") else 0
+                net_loss = max(0, damage - b_test.player.block)
+                hp_after = b_test.player.hp - net_loss
+                if hp_after <= 0:
+                    score = -50000 + hp_after
+                else:
+                    score = hp_after - b_test.enemy.hp
+            if score > best_score:
+                best_score = score
+                best_combo = seq
+
+        cards_to_play = [b.deck.hand[i] for i in best_combo]
+        for card in cards_to_play:
+            c_idx = next(i for i, c in enumerate(b.deck.hand) if c.id == card.id)
+            b.play(c_idx)
         b.end_turn()
     return b.status
 

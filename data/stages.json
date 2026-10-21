@@ -9,7 +9,7 @@
     ],
     "enemy": {
       "name": "Fire Imp",
-      "hp": 28,
+      "hp": 40,
       "pattern": [
         [
           "attack",
@@ -257,7 +257,25 @@
       },
       "procedural_motion": false,
       "placeholder_projectile": false,
-      "placeholder_hit_effect": false
+      "placeholder_hit_effect": false,
+      "lighting": {
+        "enabled": true,
+        "ambient": [
+          246,
+          222,
+          204
+        ],
+        "highlight": [
+          22,
+          13,
+          4
+        ],
+        "bounce": [
+          16,
+          8,
+          2
+        ]
+      }
     },
     "opponent": {
       "path": "assets/enemies/enemy_01/idle/idle_01.png",
@@ -419,7 +437,25 @@
       },
       "placeholder_projectile": false,
       "placeholder_hit_effect": false,
-      "procedural_motion": false
+      "procedural_motion": false,
+      "lighting": {
+        "enabled": true,
+        "ambient": [
+          248,
+          226,
+          210
+        ],
+        "highlight": [
+          24,
+          14,
+          5
+        ],
+        "bounce": [
+          18,
+          9,
+          3
+        ]
+      }
     },
     "camera": {
       "composition": "fixed_three_quarter",
