@@ -6,7 +6,7 @@ This update supersedes the illustration-oriented visual brief in the original `T
 
 Use a fixed, elevated three-quarter Blender camera, looking diagonally across the battlefield. Start with an orthographic camera at roughly 35 degrees elevation and 45 degrees azimuth; tune framing together before producing assets. Camera angle is baked into PNGs, never synthesized by the runtime. The runtime `camera.composition` field documents this convention; it is not a 3D camera control.
 
-Stage 1 places the Duelist closer to the front-left and the Flame Warden farther back-right. Transparent character renders stand at explicit ground anchors. Flat-shaded facets, restrained silhouettes, stylized anime proportions, warm ember light, and cool shadow planes establish the direction. Avoid detailed painted illustration and pixel-art treatments.
+Stage 1 places the Duelist closer to the front-left and the Fire Imp farther back-right. Transparent character renders stand at explicit ground anchors. Flat-shaded facets, restrained silhouettes, stylized anime proportions, warm ember light, and cool shadow planes establish the direction. Avoid detailed painted illustration and pixel-art treatments.
 
 The Stage 1 procedural diamond clearing, faceted trees, crystal plinth, and faceted character stand-ins are composition studies, not final Blender renders. Stages 2–5 retain provisional environments. Polish and approve the Stage 1 camera, lighting, character scale, floor contact, and UI clearance before commissioning the remaining final art.
 
