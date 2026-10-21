@@ -78,11 +78,11 @@ class ParallaxBackground:
 class ParallaxCamera:
     def __init__(self, background, config):
         self.background=background
-        settings=background.manifest["parallax"]
+        settings=background.manifest.get("parallax",{})
         self.options=background.options
-        self.limits=self.options.get("max_offset_px",settings["max_offset_px"])
-        self.jitter=self.options.get("max_jitter",settings["camera_shake"]["max_jitter"])
-        self.zoom_range=self.options.get("zoom_range",settings["zoom"]["range"])
+        self.limits=self.options.get("max_offset_px",settings.get("max_offset_px",{"x":40,"y":25}))
+        self.jitter=self.options.get("max_jitter",settings.get("camera_shake",{}).get("max_jitter",6))
+        self.zoom_range=self.options.get("zoom_range",settings.get("zoom",{}).get("range",[0.95,1.15]))
         self.base_zoom=max(self.zoom_range[0],min(self.zoom_range[1],config.get("zoom",1.0)))
         self.target_zoom=self.base_zoom
         self.current_zoom=self.base_zoom

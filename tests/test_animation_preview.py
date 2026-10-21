@@ -491,3 +491,26 @@ def test_stage_one_debug_menu_disabled_by_default():
         assert not a.battlefield.camera.debug
     finally:
         pygame.quit()
+
+def test_stage_two_debug_menus_and_opponent_preview():
+    a = App()
+    try:
+        a.action("start")
+        a.campaign.index = 1
+        a.load_stage()
+        a.action("battle")
+        a.update(.3)
+        assert a.campaign.stage.get("debug") is True
+        assert a.battlefield.background.options.get("debug_controls") is True
+        a.draw()
+        assert "preview_toggle" in a.buttons
+        a.action("preview_toggle")
+        assert a.preview is not None
+        assert a.preview.target == "player"
+        a.action("preview_switch_target")
+        assert a.preview.target == "opponent"
+        assert len(a.preview.paths) == 83
+        a.action("preview_toggle")
+        assert a.preview is None
+    finally:
+        pygame.quit()

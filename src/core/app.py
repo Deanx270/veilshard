@@ -1,5 +1,8 @@
+import copy
+import json
 import os
 import pygame
+from src.core.resources import resource
 from src.core.input import SIZE, logical_mouse, viewport
 from src.scenes.campaign import Campaign
 from src.rendering.assets import Assets
@@ -102,8 +105,62 @@ class App:
             self.fade=0.28
         self.load_stage()
 
+    def save_preview_properties(self):
+        if os.environ.get("PYTEST_CURRENT_TEST"):
+            return
+        stage_id = self.campaign.stage["id"]
+        stages_path = resource("data/stages.json")
+        try:
+            with open(stages_path, "r", encoding="utf-8") as f:
+                stages = json.load(f)
+
+            target_stage = None
+            for s in stages:
+                if s.get("id") == stage_id:
+                    target_stage = s
+                    break
+            if not target_stage:
+                return
+
+            saved_targets = []
+            for key, prev in list(self.preview_cache.items()):
+                if isinstance(key, tuple) and len(key) == 2:
+                    s_id, target = key
+                else:
+                    s_id = key
+                    target = "player"
+                if s_id == stage_id and target in target_stage:
+                    target_stage[target]["position"] = list(prev.spec["position"])
+                    target_stage[target]["size"] = list(prev.spec["size"])
+                    target_stage[target]["scale"] = prev.spec.get("scale", 1.0)
+                    target_stage[target]["shadow"] = copy.deepcopy(prev.spec["shadow"])
+                    self.campaign.stage[target]["position"] = list(prev.spec["position"])
+                    self.campaign.stage[target]["size"] = list(prev.spec["size"])
+                    self.campaign.stage[target]["scale"] = prev.spec.get("scale", 1.0)
+                    self.campaign.stage[target]["shadow"] = copy.deepcopy(prev.spec["shadow"])
+                    if hasattr(self, "battlefield") and target in self.battlefield.actors:
+                        actor = self.battlefield.actors[target]
+                        actual_actor = getattr(actor, "original", actor)
+                        actual_actor.spec["position"] = list(prev.spec["position"])
+                        actual_actor.spec["size"] = list(prev.spec["size"])
+                        actual_actor.spec["scale"] = prev.spec.get("scale", 1.0)
+                        actual_actor.spec["shadow"] = copy.deepcopy(prev.spec["shadow"])
+                        if hasattr(actual_actor, "clips") and prev.spec["shadow"].get("mode") in ("frame", "contact"):
+                            from src.rendering.frame_shadow import FrameShadows
+                            actual_actor.frame_shadows = FrameShadows([frame for frames, _, _ in actual_actor.clips.values() for frame in frames], actual_actor.spec["shadow"])
+                    saved_targets.append(target)
+
+            with open(stages_path, "w", encoding="utf-8") as f:
+                json.dump(stages, f, indent=2)
+                f.write("\n")
+            if saved_targets:
+                print(f"[AUTO-SAVE] Successfully saved {saved_targets} for Stage {stage_id} to data/stages.json")
+        except Exception as e:
+            print(f"[AUTO-SAVE ERROR] Could not save stage properties: {e}")
+
     def close_preview(self):
         if self.preview is not None:
+            self.save_preview_properties()
             self.battlefield.actors[self.preview_target] = self.preview.original
             self.preview = None
 
@@ -152,7 +209,9 @@ class App:
                 self.switch_preview_target(new_target)
             elif name == "preview_smaller": self.preview.resize(1/1.05)
             elif name == "preview_larger": self.preview.resize(1.05)
-            elif name == "preview_log": self.preview.log()
+            elif name == "preview_log":
+                self.preview.log()
+                self.save_preview_properties()
             elif name == "preview_slower": self.preview.fps = max(1, self.preview.fps-1)
             elif name == "preview_faster": self.preview.fps = min(60, self.preview.fps+1)
 

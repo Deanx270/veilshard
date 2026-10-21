@@ -21,7 +21,14 @@ class AnimationPreview:
         if folder:
             target_dir = folder
         elif target == "opponent":
-            target_dir = resource("assets/enemies/enemy_01")
+            opp_path = original.spec.get("path", "")
+            if opp_path:
+                p = resource(opp_path).parent
+                while p.name in ("idle", "attack", "hurt", "defend"):
+                    p = p.parent
+                target_dir = p
+            else:
+                target_dir = resource(f"assets/enemies/enemy_{stage_id:02d}")
         else:
             target_dir = resource("assets/characters/char_01")
         if not target_dir.exists():
@@ -38,7 +45,7 @@ class AnimationPreview:
         self.playing = False
         self.fps = 12
         self.index = 0
-        self.message = "Adjust, then Log values to save a shareable readout."
+        self.message = "Auto-saves character & enemy properties to stages.json on F6 close / Tab switch."
         self.resize(1)
 
     @property

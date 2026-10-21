@@ -90,7 +90,7 @@ def test_debug_controls_pause_reset_and_stage_scope(app):
     key(pygame.K_F4); assert camera.remaining>0
     app.paused=True; before=camera.remaining; app.update(1); assert camera.remaining==before
     app.paused=False; key(pygame.K_HOME); assert camera.target==[0,0] and camera.zoom==1
-    for index in range(1,5):
+    for index in range(2,5):
         app.campaign.index=index;app.load_stage()
         assert not app.battlefield.parallax
 
