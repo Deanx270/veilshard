@@ -1,3 +1,4 @@
+import os
 import pygame
 from src.core.input import SIZE, logical_mouse, viewport
 from src.scenes.campaign import Campaign
@@ -38,14 +39,61 @@ class App:
         self.last_scene="menu"
         self.loaded_stage=None
         self.buttons={}
-        self.load_stage()
+        self.draw_loading(0.01, "Initializing...")
+        self.load_stage(progress_cb=self.draw_loading)
 
-    def load_stage(self):
+    def draw_loading(self, progress: float, status_text: str = ""):
+        if os.environ.get("SDL_VIDEODRIVER") == "dummy":
+            return
+        s = self.canvas
+        ui = self.ui
+        c = self.campaign
+        accent = c.stage.get("accent", (238, 132, 90))
+
+        for event in pygame.event.get(pygame.QUIT):
+            self.running = False
+            return
+
+        s.fill((10, 14, 26))
+        ui.panel(s, pygame.Rect(390, 240, 820, 420), (17, 24, 43), (65, 76, 108), 24)
+
+        subtitle = c.story.get("subtitle", "RESONANCE OF THE WEAVER").upper()
+        ui.text(s, subtitle, (800, 290), 18, accent, True)
+        ui.text(s, c.story.get("title", "VEILSHARD"), (800, 350), 54, INK, True)
+
+        stage_name = c.stage.get("name", "Ember Forest")
+        info = f"Chapter {c.index+1:02} : {stage_name}"
+        ui.text(s, info, (800, 420), 22, MUTED, True)
+
+        bar_x, bar_y, bar_w, bar_h = 500, 475, 600, 18
+        pygame.draw.rect(s, (13, 17, 30), (bar_x, bar_y, bar_w, bar_h), border_radius=9)
+        pygame.draw.rect(s, (45, 55, 80), (bar_x, bar_y, bar_w, bar_h), 2, border_radius=9)
+
+        pct = max(0.0, min(1.0, progress))
+        fill_w = max(0, min(bar_w, round(bar_w * pct)))
+        if fill_w > 0:
+            pygame.draw.rect(s, accent, (bar_x, bar_y, fill_w, bar_h), border_radius=9)
+            if fill_w > 8:
+                hl = pygame.Rect(bar_x + 4, bar_y + 3, fill_w - 8, max(2, bar_h // 4))
+                pygame.draw.rect(s, (255, 255, 255, 110), hl, border_radius=4)
+
+        pct_text = f"{int(pct * 100)}%"
+        detail = f"{status_text}  ({pct_text})" if status_text else f"Loading assets...  ({pct_text})"
+        ui.text(s, detail, (800, 525), 18, (160, 175, 205), True)
+        ui.text(s, "VEILSHARD  /  PROTOTYPE 01", (40, 850), 17, MUTED)
+
+        self.window.fill((5, 7, 13))
+        area = viewport(self.window.get_size())
+        self.window.blit(pygame.transform.smoothscale(s, area.size), area)
+        pygame.display.flip()
+
+    def load_stage(self, progress_cb=None):
         stage=self.campaign.stage
         if self.loaded_stage==stage["id"]: return
         self.close_preview()
         self.loaded_stage=stage["id"]
-        self.battlefield=Battlefield(self.assets,stage)
+        cb = progress_cb if progress_cb is not None else getattr(self, "draw_loading", None)
+        self.battlefield=Battlefield(self.assets,stage,progress_cb=cb)
         self.background=self.battlefield.background
 
     def change_feedback(self):
@@ -299,6 +347,9 @@ class App:
             self.ui.text(self.canvas,"End your turn to draw three cards.",(800,804),21,INK,True)
 
     def run(self,frames=None):
+        if not self.running:
+            pygame.quit()
+            return
         count=0
         try:
             while self.running and (frames is None or count<frames):

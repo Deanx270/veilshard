@@ -38,20 +38,33 @@ def placeholder(size, accent, enemy=False, beast=False):
 
 class CharacterSprite:
     """Cached RGBA clips sharing a fixed canvas and normalized ground anchor."""
-    def __init__(self, assets, spec: dict, accent, enemy=False, beast=False):
+    def __init__(self, assets, spec: dict, accent, enemy=False, beast=False, progress_cb=None, progress_range=(0.0, 1.0)):
         self.spec = spec
         self.enemy = enemy
         scale = spec.get("scale", 1.0)
         self.size = tuple(max(1, round(v * scale)) for v in spec["size"])
+        actor_name = "opponent" if enemy else "character"
+        p_min, p_max = progress_range
+        p_span = p_max - p_min
         fallback = assets.image(spec.get("path", ""), self.size, preserve_aspect=True)
         if fallback is None:
             fallback = placeholder(self.size, accent, enemy, beast)
         else:
             self.size = fallback.get_size()
         self.clips = {"idle": ([fallback], 8, True)}
-        for name, clip in spec.get("animations", {}).items():
-            frames = [assets.image(path, self.size, preserve_aspect=True) for path in clip.get("frames", [])]
-            frames = [frame for frame in frames if frame is not None]
+        anims = spec.get("animations", {})
+        total_frames = max(1, sum(len(c.get("frames", [])) for c in anims.values()))
+        loaded_count = 0
+        for name, clip in anims.items():
+            frames = []
+            for path in clip.get("frames", []):
+                frame = assets.image(path, self.size, preserve_aspect=True)
+                if frame is not None:
+                    frames.append(frame)
+                loaded_count += 1
+                if progress_cb and (loaded_count % 6 == 0 or loaded_count == total_frames):
+                    frac = p_min + p_span * 0.70 * (loaded_count / total_frames)
+                    progress_cb(frac, f"Loading {actor_name} frames ({loaded_count}/{total_frames})...")
             if frames:
                 self.clips[name] = (frames, max(0.1, clip.get("fps", 8)), clip.get("loop", name == "idle"))
         if "hit" in self.clips and "hurt" not in self.clips:
@@ -68,6 +81,8 @@ class CharacterSprite:
             self.clips["defend"] = self.clips["block"]
         lighting = spec.get("lighting", {})
         if lighting.get("enabled", True) and (lighting.get("ambient") or lighting.get("highlight") or lighting.get("bounce")):
+            if progress_cb:
+                progress_cb(p_min + p_span * 0.76, f"Applying lighting to {actor_name}...")
             self.clips = self._apply_lighting(self.clips, lighting)
         # Static clip registration corrects differences in exported canvas origin.
         # It never follows the changing silhouette or adds animated displacement.
@@ -78,6 +93,8 @@ class CharacterSprite:
             offset = config.get("canvas_offset", [0, 0])
             self.clip_offsets[name] = tuple(round(offset[i] * self.size[i] / source_size[i]) for i in range(2))
         self.flashes = {}
+        if progress_cb:
+            progress_cb(p_min + p_span * 0.86, f"Processing hit reactions for {actor_name}...")
         for name, (frames, fps, loop) in self.clips.items():
             frames = [pygame.transform.flip(f, True, False) if spec.get("flip_x", False) else f for f in frames]
             self.clips[name] = (frames, fps, loop)
@@ -94,7 +111,11 @@ class CharacterSprite:
         if self.shadow is None:
             self.shadow = pygame.Surface(shadow_size, pygame.SRCALPHA)
             pygame.draw.ellipse(self.shadow, (5, 8, 18, shadow.get("opacity", 100)), self.shadow.get_rect())
+        if progress_cb:
+            progress_cb(p_min + p_span * 0.94, f"Generating shadows for {actor_name}...")
         self.frame_shadows = FrameShadows([frame for frames, _, _ in self.clips.values() for frame in frames], shadow) if shadow.get("mode") in ("frame", "contact") else None
+        if progress_cb:
+            progress_cb(p_max, f"{actor_name.capitalize()} ready")
         self.state = "idle"
         self.elapsed = 0.0
         self.hit_time = 0.0

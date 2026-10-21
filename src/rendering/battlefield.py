@@ -55,19 +55,26 @@ class Camera:
 
 
 class Battlefield:
-    def __init__(self, assets, stage: dict):
+    def __init__(self, assets, stage: dict, progress_cb=None):
         self.parallax = "manifest" in stage["background"]
+        if progress_cb:
+            progress_cb(0.04, "Loading environment background...")
         self.background = ParallaxBackground(assets,stage["background"]) if self.parallax else Background(assets, stage)
+        if progress_cb:
+            progress_cb(0.10, "Environment ready")
         self.camera = ParallaxCamera(self.background,stage.get("camera",{})) if self.parallax else Camera(stage.get("camera", {}))
         self.motion=None
         self.reactions={}
         self.world = pygame.Surface(self.background.size if self.parallax else (1600, 900))
         self.effect_layer=pygame.Surface((1600,900),pygame.SRCALPHA)
         self.actors = {
-            key: CharacterSprite(assets, stage[key], stage["accent"] if key == "opponent" else (146,175,244),
-                                 enemy=key == "opponent", beast=key == "opponent" and stage["id"] in (2,4))
-            for key in ("player", "opponent")
+            "player": CharacterSprite(assets, stage["player"], (146,175,244),
+                                     enemy=False, beast=False, progress_cb=progress_cb, progress_range=(0.10, 0.52)),
+            "opponent": CharacterSprite(assets, stage["opponent"], stage["accent"] if "accent" in stage else (146,175,244),
+                                       enemy=True, beast=stage["id"] in (2,4), progress_cb=progress_cb, progress_range=(0.52, 0.95))
         }
+        if progress_cb:
+            progress_cb(1.0, "Stage ready")
 
     def feedback(self, effects, source: str, action: str):
         for effect in effects:
