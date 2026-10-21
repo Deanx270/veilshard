@@ -1,0 +1,195 @@
+{
+  "version": 2,
+  "canvas": {
+    "width": 2560,
+    "height": 1080
+  },
+  "viewport": {
+    "x": 320,
+    "y": 0,
+    "width": 1920,
+    "height": 1080
+  },
+  "coordinate_system": "Pixels, origin top-left; positive x right, positive y down. All PNGs have identical full-canvas dimensions.",
+  "alpha": "Straight RGBA PNG; normal source-over blending. Sky opaque.",
+  "render_order": [
+    "sky.png",
+    "clouds.png",
+    "far_mountains.png",
+    "fortress.png",
+    "upper_midground.png",
+    "midground_ruins.png",
+    "ground.png",
+    "foreground.png"
+  ],
+  "layers": [
+    {
+      "file": "sky.png",
+      "z": 0,
+      "default_position": {
+        "x": -320,
+        "y": 0
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "parallax": {
+        "x": 0.02,
+        "y": 0.02
+      }
+    },
+    {
+      "file": "clouds.png",
+      "z": 1,
+      "default_position": {
+        "x": -320,
+        "y": 0
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "parallax": {
+        "x": 0.06,
+        "y": 0.04
+      }
+    },
+    {
+      "file": "far_mountains.png",
+      "z": 2,
+      "default_position": {
+        "x": -320,
+        "y": 0
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "parallax": {
+        "x": 0.1,
+        "y": 0.08
+      }
+    },
+    {
+      "file": "fortress.png",
+      "z": 3,
+      "default_position": {
+        "x": -320,
+        "y": 0
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "parallax": {
+        "x": 0.16,
+        "y": 0.12
+      }
+    },
+    {
+      "file": "upper_midground.png",
+      "z": 4,
+      "default_position": {
+        "x": -320,
+        "y": 0
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "parallax": {
+        "x": 0.26,
+        "y": 0.18
+      }
+    },
+    {
+      "file": "midground_ruins.png",
+      "z": 5,
+      "default_position": {
+        "x": -320,
+        "y": 0
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "parallax": {
+        "x": 0.45,
+        "y": 0.3
+      }
+    },
+    {
+      "file": "ground.png",
+      "z": 6,
+      "default_position": {
+        "x": -320,
+        "y": 0
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "parallax": {
+        "x": 0.7,
+        "y": 0.5
+      }
+    },
+    {
+      "file": "foreground.png",
+      "z": 7,
+      "default_position": {
+        "x": -320,
+        "y": 0
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "parallax": {
+        "x": 1,
+        "y": 0.8
+      }
+    }
+  ],
+  "camera": {
+    "formula": "screen_position = default_position - camera_delta * parallax + cloud_drift (clouds only)",
+    "suggested_max_delta": {
+      "x": 48,
+      "y": 0
+    },
+    "shake": {
+      "max_x": 3,
+      "max_y": 0
+    },
+    "zoom": {
+      "default": 1,
+      "min": 1,
+      "max": 1.03
+    },
+    "notes": "Conservative starting settings, not engine-certified. No vertical overscan; vertical camera motion and vertical shake disabled. Test object overlaps at camera extremes in your engine. Increasing zoom crops the composition."
+  },
+  "cloud_drift": {
+    "enabled": true,
+    "speed_px_per_second": 2,
+    "direction": "right",
+    "wrap_period_px": 2560,
+    "instances": [
+      -2560,
+      0,
+      2560
+    ],
+    "notes": "Render repeated copies; transparent horizontal borders permit wrapping. Art placement repeats every 2560 px; not a continuous opaque texture."
+  },
+  "previews": {
+    "recombined_preview": "1920x1080 central viewport, actual layer composite",
+    "expanded_master": "2560x1080 actual layer composite",
+    "layer_preview": "Eight labeled layers on checkerboard"
+  },
+  "provenance": {
+    "method": "Built-in image_gen regenerated each depth layer. Generated sprites rescaled and positioned on shared canvas. Original reference was not manually cut or used as composited pixels.",
+    "source": "Stage2_Frozen_Ruins_LowPoly_1920x1080.png",
+    "limitations": "Regenerated interpretation rather than pixel-identical reconstruction. Some architecture, terrain, cloud silhouettes and foreground details differ from reference. Native generator outputs were resized; not native 2560x1080 renders."
+  },
+  "revision_notes": "Sky tonal variation; snow along pavement edge; central/right distant colonnades partially concealed by local ice ridges within midground_ruins.png. Five other layers are byte-identical to previous version."
+}
