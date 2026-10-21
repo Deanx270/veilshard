@@ -88,7 +88,7 @@ class App:
         if name == "preview_toggle":
             if self.preview:
                 self.close_preview()
-            else:
+            elif self.campaign.stage.get("debug", False):
                 self.open_preview(self.preview_target)
         elif name == "preview_switch_target":
             if self.preview:
@@ -147,8 +147,9 @@ class App:
         if event.type==pygame.QUIT: self.running=False
         if event.type==pygame.KEYDOWN and self.campaign.scene=="battle" and not self.paused:
             if event.key == pygame.K_F6:
-                self.preview_action("preview_toggle")
-                return
+                if self.campaign.stage.get("debug", False) or self.preview:
+                    self.preview_action("preview_toggle")
+                    return
             if self.preview:
                 if event.key in (pygame.K_TAB, pygame.K_t):
                     self.preview_action("preview_switch_target")
@@ -284,8 +285,9 @@ class App:
             self.ui.text(self.canvas,f"{mode}  parallax={self.background.enabled}  pan=({camera.pan[0]:.1f}, {camera.pan[1]:.1f})  zoom={camera.zoom:.3f}",(440,49),17)
             self.ui.text(self.canvas,"Arrows: pan to limits   Home: reset view   (source-pixel units)",(440,73),16)
         if self.preview: self.preview.panel(self, mouse)
-        self.button("preview_toggle", "Close preview (F6)" if self.preview else "Test animation (F6)", (965, 16, 215, 30) if self.preview else (675, 22, 250, 40), mouse, not self.lock)
-        if self.preview_error: self.ui.text(self.canvas, self.preview_error[:110], (530, 70), 17)
+        if self.campaign.stage.get("debug", False) or self.preview:
+            self.button("preview_toggle", "Close preview (F6)" if self.preview else "Test animation (F6)", (965, 16, 215, 30) if self.preview else (675, 22, 250, 40), mouse, not self.lock)
+        if self.preview_error and (self.campaign.stage.get("debug", False) or self.preview): self.ui.text(self.canvas, self.preview_error[:110], (530, 70), 17)
         if not b.deck.hand:
             self.ui.text(self.canvas,"End your turn to draw three cards.",(800,804),21,INK,True)
 

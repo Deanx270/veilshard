@@ -11,6 +11,7 @@ from src.rendering.animation_preview import AnimationPreview
 @pytest.fixture
 def app(tmp_path):
     a = App()
+    a.campaign.stage["debug"] = True
     a.action("start")
     a.action("battle")
     a.update(.3)
@@ -472,3 +473,21 @@ def test_stage_one_enemy_clips_lock_and_rightward_parallax(app):
         # Finish animations
         app.update(app.lock + 0.05)
         assert enemy.state == "idle" and player.state == "idle" and not app.lock
+
+
+def test_stage_one_debug_menu_disabled_by_default():
+    a = App()
+    try:
+        a.action("start")
+        a.action("battle")
+        a.update(.3)
+        assert not a.campaign.stage.get("debug", False)
+        assert not a.battlefield.background.options.get("debug_controls", False)
+        a.draw()
+        assert "preview_toggle" not in a.buttons
+        a.event(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_F6))
+        assert a.preview is None
+        a.event(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_F1))
+        assert not a.battlefield.camera.debug
+    finally:
+        pygame.quit()

@@ -76,6 +76,11 @@ def test_foreground_occludes_sprite_and_master_skips_overlay(app):
 def test_debug_controls_pause_reset_and_stage_scope(app):
     camera=app.battlefield.camera
     def key(k):app.event(pygame.event.Event(pygame.KEYDOWN,key=k))
+    # By default, stage 1 has debug_controls disabled
+    assert not camera.options.get("debug_controls", False)
+    key(pygame.K_F1); assert not camera.debug
+    # When enabled, debug controls allow runtime camera manipulation
+    camera.options["debug_controls"] = True
     key(pygame.K_RIGHT); assert camera.target==[0,0]
     key(pygame.K_F1); key(pygame.K_RIGHT); key(pygame.K_UP)
     assert camera.target==[40,-25]

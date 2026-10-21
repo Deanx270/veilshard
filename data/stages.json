@@ -34,7 +34,7 @@
         "actor_layer": "ground",
         "smoothing": 9.0,
         "impact_pan": 14.0,
-        "debug_controls": true,
+        "debug_controls": false,
         "max_jitter": 10
       }
     },
@@ -429,7 +429,8 @@
         800,
         430
       ]
-    }
+    },
+    "debug": false
   },
   {
     "id": 2,
