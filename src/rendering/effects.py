@@ -15,19 +15,34 @@ class Effects:
         self.popups=[]
         self.bursts=[]
 
-    def add(self, effects, stage, action="attack"):
+    def add(self, effects, stage, action="attack", source="player"):
         for effect in effects:
-            spec=stage["player" if effect.target=="player" else "opponent"]
-            pos=spec["position"]
-            height=spec["size"][1]*spec.get("scale",1.0)
-            color={"damage":(255,150,160),"heal":(136,246,192),"block":(142,206,255),"charge":(233,199,255)}[effect.kind]
-            label={"damage":f"−{effect.amount}","heal":f"+{effect.amount} HP","block":f"+{effect.amount} BLOCK","charge":"CHARGING"}[effect.kind]
-            center=(pos[0],pos[1]-height*0.5)
-            heavy=action in ("heavy","special")
-            rng=random.Random(len(self.bursts)+effect.amount)
-            particles=[(rng.uniform(0,math.tau),rng.uniform(45,140 if heavy else 90)) for _ in range(14 if heavy else 7)]
-            self.bursts.append({"kind":effect.kind,"heavy":heavy,"center":center,"color":color,"age":0.0,"particles":particles})
-            self.popups.append(Popup(label,(pos[0],pos[1]-height*0.65),color))
+            target_key = "player" if effect.target == "player" else "opponent"
+            attacker_key = source if source in ("player", "opponent") else ("opponent" if target_key == "player" else "player")
+            spec = stage[target_key]
+            attacker_spec = stage.get(attacker_key, {})
+            pos = spec["position"]
+            scale = spec.get("scale", 1.0)
+            width = spec["size"][0] * scale
+            height = spec["size"][1] * scale
+            anchor = spec.get("anchor", [0.5, 1.0])
+            ground = spec.get("shadow", {}).get("ground", anchor)
+            actor_x = round(pos[0] + (ground[0] - anchor[0]) * width)
+            actor_y = round(pos[1] + (ground[1] - anchor[1]) * height)
+            body_h = height * spec.get("shadow", {}).get("crop", [0, 0, 1, 1])[3]
+            color = {"damage":(255,150,160),"heal":(136,246,192),"block":(142,206,255),"charge":(233,199,255)}[effect.kind]
+            label = {"damage":f"−{effect.amount}","heal":f"+{effect.amount} HP","block":f"+{effect.amount} BLOCK","charge":"CHARGING"}[effect.kind]
+            center = (actor_x, actor_y-body_h*0.5)
+            heavy = action in ("heavy", "special")
+            skip_burst = False
+            if effect.kind == "damage":
+                if not attacker_spec.get("placeholder_hit_effect", True) or not spec.get("placeholder_hit_effect", True) or stage.get("id") == 1:
+                    skip_burst = True
+            if not skip_burst:
+                rng = random.Random(len(self.bursts) + effect.amount)
+                particles = [(rng.uniform(0, math.tau), rng.uniform(45, 140 if heavy else 90)) for _ in range(14 if heavy else 7)]
+                self.bursts.append({"kind":effect.kind,"heavy":heavy,"center":center,"color":color,"age":0.0,"particles":particles})
+            self.popups.append(Popup(label, (actor_x, actor_y-body_h*0.65), color))
 
     def update(self, dt):
         for burst in self.bursts: burst["age"]+=dt

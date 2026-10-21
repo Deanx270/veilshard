@@ -2,7 +2,7 @@ import random
 import pytest
 from src.cards.models import Deck
 from src.combat.battle import Fighter
-from src.enemies.intentions import Intent
+from src.enemies.intentions import EnemyPlan, Intent
 from src.scenes.campaign import Campaign
 
 @pytest.fixture
@@ -80,12 +80,21 @@ def test_end_turn_discards_and_resets(campaign):
     b=campaign.battle; b.energy=0; b.end_turn()
     assert len(b.deck.hand)==3 and len(b.deck.discard)==3 and b.energy==2 and b.turn==2
 
-@pytest.mark.parametrize("kind,amount,expected_hp,block",[("attack",7,23,0),("special",11,19,0),("defend",8,30,8),("heal",6,30,0),("charge",0,30,0)])
+@pytest.mark.parametrize("kind,amount,expected_hp,block",[("attack",7,23,0),("heavy",7,23,0),("special",11,19,0),("defend",8,30,8),("heal",6,30,0),("charge",0,30,0)])
 def test_enemy_actions(campaign,kind,amount,expected_hp,block):
     b=campaign.battle; b.enemy.hp-=2; before=b.enemy.hp
     b.intent=Intent(kind,amount); b.end_turn()
     assert b.player.hp==expected_hp and b.enemy.block==block
     if kind=="heal": assert b.enemy.hp==before+2
+
+def test_stage_one_enemy_heavy_attack_chance(campaign):
+    enemy_def = campaign.stages[0]["enemy"]
+    assert enemy_def.get("heavy_chance") == 0.5
+    plan = EnemyPlan(enemy_def, random.Random(42))
+    kinds = [plan.next(28, 28).kind for _ in range(200)]
+    assert "attack" in kinds and "heavy" in kinds
+    assert 70 <= kinds.count("heavy") <= 130
+    assert Intent("heavy", 7).label == "Heavy Attack  7"
 
 def test_kill_prevents_enemy_action(campaign):
     b=campaign.battle; b.enemy.hp=1; give(campaign,"attack"); b.play(0)
@@ -136,7 +145,7 @@ def auto_play(b):
                     if c.amount>=b.enemy.hp+b.enemy.block: return 100
                     return c.amount/c.cost
                 if c.category=="heal": return min(c.amount,30-b.player.hp)+1 if b.player.hp<30 else -1
-                damage=b.intent.amount if b.intent.kind in ("attack","special") else 0
+                damage=b.intent.amount if b.intent.kind in ("attack","heavy","special") else 0
                 return min(c.amount,max(0,damage-b.player.block))+0.5 if damage else -1
             option=max(options,key=score)
             if score(option)<0: break

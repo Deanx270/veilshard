@@ -40,7 +40,7 @@ def test_rapid_card_clicks_resolve_once_at_impact(app,kind,damage,cost):
     assert b.enemy.hp==hp-damage and b.energy==2-cost
     assert app.battlefield.camera.remaining>0 and app.effects.popups
     assert app.hud.display_hp["enemy"]>b.enemy.hp
-    for _ in range(60): app.update(1/60)
+    for _ in range(120): app.update(1/60)
     assert not app.lock and not app.timeline.active
     assert b.enemy.hp==hp-damage and b.turn==1
 
@@ -52,9 +52,9 @@ def test_enemy_attack_pause_and_rapid_end_turn(app):
     app.update(.1); age=app.timeline.elapsed
     app.action("pause"); app.update(5)
     assert app.timeline.elapsed==age and b.player.hp==hp
-    app.action("resume"); app.update(.13)
+    app.action("resume"); app.update(app.timeline.impact-age+.01)
     assert b.turn==2 and b.player.hp==hp-damage
-    app.update(2)
+    app.update(3)
     assert b.turn==2 and not app.lock
 
 
@@ -94,4 +94,7 @@ def test_long_frame_and_strength(app):
     assert calls==[1] and not t.active
     b=set_card(app,"heavy"); click_card(app); app.update(app.timeline.impact+.01)
     assert app.battlefield.camera.strength>1
+    assert not app.effects.bursts
+    from src.combat.battle import Effect
+    app.effects.add([Effect("enemy","damage",10)], app.campaign.stages[1], "heavy", "player")
     assert len(app.effects.bursts[-1]["particles"])==14

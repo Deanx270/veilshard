@@ -26,6 +26,7 @@ class App:
         self.pending_card=None
         self.preview=None
         self.preview_cache={}
+        self.preview_target="player"
         self.preview_error=""
         self.effects=Effects()
         self.clock=pygame.time.Clock()
@@ -55,8 +56,32 @@ class App:
 
     def close_preview(self):
         if self.preview is not None:
-            self.battlefield.actors["player"] = self.preview.original
+            self.battlefield.actors[self.preview_target] = self.preview.original
             self.preview = None
+
+    def open_preview(self, target="player"):
+        stage_id = self.campaign.stage["id"]
+        self.preview_target = target
+        try:
+            cache_key = (stage_id, target)
+            if cache_key in self.preview_cache:
+                self.preview = self.preview_cache[cache_key]
+            elif target == "player" and stage_id in self.preview_cache:
+                self.preview = self.preview_cache[stage_id]
+            else:
+                self.preview = AnimationPreview(self.battlefield.actors[target], stage_id, target=target)
+                self.preview_cache[cache_key] = self.preview
+            self.preview.original = self.battlefield.actors[target]
+            self.battlefield.actors[target] = self.preview
+            self.preview_error = ""
+        except (ValueError, pygame.error, OSError) as error:
+            self.preview_error = str(error)
+
+    def switch_preview_target(self, new_target):
+        if not self.preview or new_target == self.preview_target:
+            return
+        self.close_preview()
+        self.open_preview(new_target)
 
     def preview_action(self, name):
         if self.paused or self.lock or self.campaign.scene != "battle": return
@@ -64,24 +89,27 @@ class App:
             if self.preview:
                 self.close_preview()
             else:
-                stage_id = self.campaign.stage["id"]
-                try:
-                    if stage_id not in self.preview_cache:
-                        self.preview_cache[stage_id] = AnimationPreview(self.battlefield.actors["player"], stage_id)
-                    self.preview = self.preview_cache[stage_id]
-                    self.preview.original = self.battlefield.actors["player"]
-                    self.battlefield.actors["player"] = self.preview
-                    self.preview_error = ""
-                except (ValueError, pygame.error, OSError) as error:
-                    self.preview_error = str(error)
+                self.open_preview(self.preview_target)
+        elif name == "preview_switch_target":
+            if self.preview:
+                new_target = "opponent" if self.preview_target == "player" else "player"
+                self.switch_preview_target(new_target)
         elif self.preview:
             if name.startswith("preview_shadow_"): self.preview.shadow_adjust(name.removeprefix("preview_shadow_"))
             elif name == "preview_play": self.preview.play()
+            elif name == "preview_step_back": self.preview.step(-1)
+            elif name == "preview_step_forward": self.preview.step(1)
+            elif name == "preview_switch_target":
+                new_target = "opponent" if self.preview_target == "player" else "player"
+                self.switch_preview_target(new_target)
             elif name == "preview_smaller": self.preview.resize(1/1.05)
             elif name == "preview_larger": self.preview.resize(1.05)
             elif name == "preview_log": self.preview.log()
             elif name == "preview_slower": self.preview.fps = max(1, self.preview.fps-1)
             elif name == "preview_faster": self.preview.fps = min(60, self.preview.fps+1)
+
+    def actors_busy_time(self):
+        return max((getattr(a, "busy_remaining", 0.0) for a in self.battlefield.actors.values()), default=0.0)
 
     def action(self,name):
         if name.startswith("preview_"):
@@ -104,6 +132,8 @@ class App:
         elif name=="menu":
             c.scene="menu"; self.paused=False
             self.timeline.cancel(); self.pending_card=None; self.lock=0
+            for actor in self.battlefield.actors.values():
+                actor.state="idle"; actor.elapsed=0.0
         elif name=="quit": self.running=False
         elif name=="resume": self.paused=False
         elif name=="pause": self.paused=True
@@ -119,7 +149,12 @@ class App:
             if event.key == pygame.K_F6:
                 self.preview_action("preview_toggle")
                 return
-            if self.preview and self.preview.key(event.key, getattr(event, "mod", 0)): return
+            if self.preview:
+                if event.key in (pygame.K_TAB, pygame.K_t):
+                    self.preview_action("preview_switch_target")
+                    return
+                if self.preview.key(event.key, getattr(event, "mod", 0)):
+                    return
         if event.type==pygame.KEYDOWN and self.campaign.scene=="battle" and not self.paused and self.battlefield.parallax:
             if self.battlefield.camera.debug_key(event.key): return
         if event.type==pygame.KEYDOWN and event.key==pygame.K_ESCAPE:
@@ -145,13 +180,13 @@ class App:
         def impact():
             effects=resolve()
             self.pending_card=None
-            self.effects.add(effects,self.campaign.stage,kind)
+            self.effects.add(effects,self.campaign.stage,kind,source)
             self.battlefield.feedback(effects,source,kind)
         actor = self.battlefield.actors[source]
         clip = "heavy" if kind in ("heavy", "special") and "heavy" in actor.clips else "attack" if kind in ("heavy", "special") else "defend" if kind == "block" else kind
         if self.timeline.start(kind, source, impact, actor.action_timing(clip)):
-            self.lock=self.timeline.remaining
             actor.trigger(clip)
+            self.lock=max(self.timeline.remaining, self.actors_busy_time())
 
     def visible_hand(self):
         cards=list(self.campaign.battle.deck.hand)
@@ -166,7 +201,7 @@ class App:
             self.effects.update(dt)
             self.battlefield.update(dt)
             self.timeline.update(dt)
-            self.lock=self.timeline.remaining
+            self.lock=max(self.timeline.remaining, self.actors_busy_time() if self.campaign.scene=="battle" else 0.0)
             self.battlefield.motion=self.timeline
             if self.campaign.scene=="battle": self.hud.update(dt,self.campaign.battle)
             self.end_pressed=max(0,self.end_pressed-dt)
@@ -248,9 +283,9 @@ class App:
             mode="MASTER" if self.background.compare else "LAYERS"
             self.ui.text(self.canvas,f"{mode}  parallax={self.background.enabled}  pan=({camera.pan[0]:.1f}, {camera.pan[1]:.1f})  zoom={camera.zoom:.3f}",(440,49),17)
             self.ui.text(self.canvas,"Arrows: pan to limits   Home: reset view   (source-pixel units)",(440,73),16)
-        self.button("preview_toggle", "Close preview (F6)" if self.preview else "Test animation (F6)", (1070, 530 if self.preview else 340, 250, 42), mouse, not self.lock)
         if self.preview: self.preview.panel(self, mouse)
-        if self.preview_error: self.ui.text(self.canvas, self.preview_error[:110], (530, 390), 17)
+        self.button("preview_toggle", "Close preview (F6)" if self.preview else "Test animation (F6)", (965, 16, 215, 30) if self.preview else (675, 22, 250, 40), mouse, not self.lock)
+        if self.preview_error: self.ui.text(self.canvas, self.preview_error[:110], (530, 70), 17)
         if not b.deck.hand:
             self.ui.text(self.canvas,"End your turn to draw three cards.",(800,804),21,INK,True)
 

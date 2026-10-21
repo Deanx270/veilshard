@@ -40,14 +40,17 @@ class CharacterSprite:
     """Cached RGBA clips sharing a fixed canvas and normalized ground anchor."""
     def __init__(self, assets, spec: dict, accent, enemy=False, beast=False):
         self.spec = spec
+        self.enemy = enemy
         scale = spec.get("scale", 1.0)
         self.size = tuple(max(1, round(v * scale)) for v in spec["size"])
-        fallback = assets.image(spec.get("path", ""), self.size)
+        fallback = assets.image(spec.get("path", ""), self.size, preserve_aspect=True)
         if fallback is None:
             fallback = placeholder(self.size, accent, enemy, beast)
+        else:
+            self.size = fallback.get_size()
         self.clips = {"idle": ([fallback], 8, True)}
         for name, clip in spec.get("animations", {}).items():
-            frames = [assets.image(path, self.size) for path in clip.get("frames", [])]
+            frames = [assets.image(path, self.size, preserve_aspect=True) for path in clip.get("frames", [])]
             frames = [frame for frame in frames if frame is not None]
             if frames:
                 self.clips[name] = (frames, max(0.1, clip.get("fps", 8)), clip.get("loop", name == "idle"))
@@ -95,7 +98,19 @@ class CharacterSprite:
 
     @property
     def order(self):
-        return self.spec.get("render_order", self.spec["position"][1])
+        base = self.spec.get("render_order", self.spec["position"][1])
+        if self.enemy and self.state in ("attack", "heavy", "special"):
+            return max(base, self.spec.get("attack_render_order", 30))
+        return base
+
+    @property
+    def busy_remaining(self) -> float:
+        if self.state == "idle" or self.state not in self.clips:
+            return 0.0
+        frames, fps, loop = self.clips[self.state]
+        if loop:
+            return 0.0
+        return max(0.0, len(frames) / fps - self.elapsed)
 
     def action_timing(self, state: str):
         """Use exported clip timing only when every configured frame loaded."""
@@ -127,20 +142,23 @@ class CharacterSprite:
     def update(self, dt: float):
         self.hit_time = max(0.0, self.hit_time - dt)
         self.elapsed += dt
-        frames, fps, loop = self.clips[self.state]
+        state = self.state if self.state in self.clips else "idle"
+        frames, fps, loop = self.clips[state]
         if not loop and self.elapsed >= len(frames) / fps:
             self.state = "idle"
             self.elapsed = 0.0
 
     def frame_index(self):
-        frames, fps, loop = self.clips[self.state]
+        state = self.state if self.state in self.clips else "idle"
+        frames, fps, loop = self.clips[state]
         index = int(self.elapsed * fps)
         index = index % len(frames) if loop else min(index, len(frames)-1)
         return index
 
     def frame(self):
+        state = self.state if self.state in self.clips else "idle"
         index = self.frame_index()
-        return self.flashes[self.state][index] if self.hit_time > 0 else self.clips[self.state][0][index]
+        return self.flashes[state][index] if self.hit_time > 0 and state in self.flashes else self.clips[state][0][index]
 
     def draw(self, surface, displacement=(0,0)):
 
@@ -152,10 +170,11 @@ class CharacterSprite:
             rect = self.shadow.get_rect(center=(round(pos[0]+offset[0]), round(pos[1]+offset[1])))
             surface.blit(self.shadow, rect)
         frame = self.frame()
-        registration = self.clip_offsets.get(self.state, (0, 0))
+        state = self.state if self.state in self.clips else "idle"
+        registration = self.clip_offsets.get(state, (0, 0))
         top_left = (round(pos[0]-frame.get_width()*anchor[0])+registration[0],
                     round(pos[1]-frame.get_height()*anchor[1])+registration[1])
         if self.frame_shadows:
             shadow_origin = tuple(top_left[i]-registration[i] for i in range(2)) if shadow.get("mode") == "contact" else top_left
-            self.frame_shadows.draw(surface, self.clips[self.state][0][self.frame_index()], shadow_origin)
+            self.frame_shadows.draw(surface, self.clips[state][0][self.frame_index()], shadow_origin)
         surface.blit(frame, top_left)

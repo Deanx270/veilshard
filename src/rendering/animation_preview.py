@@ -12,18 +12,26 @@ def filename_order(path):
 
 
 class AnimationPreview:
-    def __init__(self, original, stage_id, folder=None):
+    def __init__(self, original, stage_id, folder=None, target="player"):
         self.original = original
+        self.target = target
         self.spec = copy.deepcopy(original.spec)
         self.spec["anchor"] = [0.5, 1.0]
         self.stage_id = stage_id
-        target_dir = folder or resource("assets/characters/char_01")
+        if folder:
+            target_dir = folder
+        elif target == "opponent":
+            target_dir = resource("assets/enemies/enemy_01")
+        else:
+            target_dir = resource("assets/characters/char_01")
         if not target_dir.exists():
             target_dir = resource("assets/test-animation")
         self.paths = sorted(target_dir.glob("**/*.png") if target_dir.is_dir() else [], key=filename_order)
         if not self.paths:
             raise ValueError(f"No PNG frames in {target_dir}")
         self.sources = [pygame.image.load(str(path)).convert_alpha() for path in self.paths]
+        if self.spec.get("flip_x", False):
+            self.sources = [pygame.transform.flip(s, True, False) for s in self.sources]
         self.height = round(original.size[1])
         self.frames = []
         self.elapsed = 0.0
@@ -35,7 +43,10 @@ class AnimationPreview:
 
     @property
     def order(self):
-        return self.spec.get("render_order", self.spec["position"][1])
+        base = self.spec.get("render_order", self.spec["position"][1])
+        if self.target == "opponent" and self.paths[self.index].name.lower().startswith("attack"):
+            return max(base, self.spec.get("attack_render_order", 30))
+        return base
 
     def resize(self, factor):
         self.height = max(40, min(1600, round(self.height * factor)))
@@ -74,6 +85,11 @@ class AnimationPreview:
         self.index = 0
         self.playing = True
 
+    def step(self, delta):
+        self.playing = False
+        self.index = (self.index + delta) % len(self.frames)
+        self.elapsed = self.index / self.fps
+
     def update(self, dt):
         if self.playing:
             self.elapsed += dt
@@ -92,6 +108,10 @@ class AnimationPreview:
             self.move(*directions[key])
         elif key == pygame.K_SPACE:
             self.play()
+        elif key in (pygame.K_LEFTBRACKET, pygame.K_COMMA):
+            self.step(-1)
+        elif key in (pygame.K_RIGHTBRACKET, pygame.K_PERIOD):
+            self.step(1)
         elif key in (pygame.K_EQUALS, pygame.K_PLUS, pygame.K_KP_PLUS):
             self.resize(1.05)
         elif key in (pygame.K_MINUS, pygame.K_KP_MINUS):
@@ -103,23 +123,40 @@ class AnimationPreview:
     def draw(self, surface, displacement=(0, 0)):
         frame = self.frames[self.index]
         x, y = (self.spec["position"][i] + displacement[i] for i in range(2))
-        # Match the live actor's fixed clip registration, including its shadow.
-        clip = "attack" if self.paths[self.index].name.startswith("attack") else "idle"
+        fname = self.paths[self.index].name.lower()
+        if fname.startswith("attack"):
+            clip = "attack"
+        elif fname.startswith("hurt") or fname.startswith("hit"):
+            clip = "hit" if "hit" in self.spec.get("animations", {}) else "hurt"
+        elif fname.startswith("defend") or fname.startswith("block"):
+            clip = "defend" if "defend" in self.spec.get("animations", {}) else "block"
+        elif fname.startswith("heal"):
+            clip = "heal"
+        else:
+            clip = "idle"
         config = self.spec.get("animations", {}).get(clip, {})
-        offset = config.get("canvas_offset", [0,0]); source = config.get("source_size", frame.get_size())
-        top_left = (round(x-frame.get_width()/2+offset[0]*frame.get_width()/source[0]),
-                    round(y-frame.get_height()+offset[1]*frame.get_height()/source[1]))
-        shadow_origin = (round(x-frame.get_width()/2), round(y-frame.get_height())) if self.spec["shadow"].get("mode") == "contact" else top_left
+        offset = config.get("canvas_offset", [0, 0])
+        source = config.get("source_size", frame.get_size())
+        top_left = (round(x - frame.get_width() / 2 + offset[0] * frame.get_width() / source[0]),
+                    round(y - frame.get_height() + offset[1] * frame.get_height() / source[1]))
+        shadow_origin = (round(x - frame.get_width() / 2), round(y - frame.get_height())) if self.spec["shadow"].get("mode") == "contact" else top_left
         self.frame_shadows.draw(surface, frame, shadow_origin)
         surface.blit(frame, top_left)
 
     def report(self):
-        return {"stage_id": self.stage_id, "position": self.spec["position"],
-                "size": list(self.frames[self.index].get_size()), "scale": 1.0,
-                "anchor": self.spec["anchor"], "fps": self.fps, "shadow": self.spec["shadow"],
-                "frame": self.paths[self.index].name,
-                "coordinate_space": "1600x900 logical battlefield; bottom-center image anchor",
-                "frames": [path.name for path in self.paths]}
+        return {
+            "stage_id": self.stage_id,
+            "target": self.target,
+            "position": self.spec["position"],
+            "size": list(self.frames[self.index].get_size()),
+            "scale": 1.0,
+            "anchor": self.spec["anchor"],
+            "fps": self.fps,
+            "shadow": self.spec["shadow"],
+            "frame": self.paths[self.index].name,
+            "coordinate_space": "1600x900 logical battlefield; bottom-center image anchor",
+            "frames": [path.name for path in self.paths]
+        }
 
     def log(self):
         text = json.dumps(self.report(), indent=2)
@@ -129,21 +166,41 @@ class AnimationPreview:
 
     def panel(self, app, mouse):
         ui, surface = app.ui, app.canvas
-        ui.panel(surface, pygame.Rect(530, 115, 790, 400))
-        ui.text(surface, "ANIMATION PREVIEW | Combat input disabled", (548, 125), 22)
+        px, py, pw, ph = 405, 10, 790, 246
+        ui.panel(surface, pygame.Rect(px, py, pw, ph))
+        target_title = "PLAYER" if self.target == "player" else "ENEMY"
+        ui.text(surface, f"ANIMATION PREVIEW | Target: {target_title} (Tab to switch)", (px + 18, py + 10), 20)
         x, y = self.spec["position"]
         w, h = self.frames[self.index].get_size()
-        ui.text(surface, f"Stage {self.stage_id} | Position ({x}, {y}) | Size {w} x {h} | Anchor bottom-center", (548, 159), 18)
-        ui.text(surface, f"{self.index+1}/{len(self.frames)}: {self.paths[self.index].name} | {self.fps} FPS | Space: restart", (548, 185), 18)
-        ui.text(surface, "Arrows: move 10 px | Shift+arrow: 1 px | +/-: resize 5%", (548, 211), 18)
-        for name, label, rect in [("preview_play", "Play", (548,240,100,38)), ("preview_smaller", "Size -", (658,240,110,38)), ("preview_larger", "Size +", (778,240,110,38)), ("preview_log", "Log values", (898,240,155,38)), ("preview_slower", "FPS -", (1063,240,110,38)), ("preview_faster", "FPS +", (1183,240,110,38))]:
-            app.button(name,label,rect,mouse)
-        ui.text(surface, self.message, (548,291), 17)
+        ui.text(surface, f"Stage {self.stage_id} | Pos ({x}, {y}) | Size {w}x{h} | {self.index+1}/{len(self.frames)}: {self.paths[self.index].name} ({self.fps} FPS)", (px + 18, py + 36), 16)
+        ui.text(surface, "Arrows: move 10px (Shift: 1px) | +/-: resize 5% | Space: play | [, ]: step frame", (px + 18, py + 58), 15)
+        target_btn = "Enemy (Tab)" if self.target == "player" else "Player (Tab)"
+        for name, label, rect in [
+            ("preview_play", "Play", (px + 18, py + 82, 75, 32)),
+            ("preview_step_back", "<", (px + 98, py + 82, 36, 32)),
+            ("preview_step_forward", ">", (px + 138, py + 82, 36, 32)),
+            ("preview_switch_target", target_btn, (px + 180, py + 82, 130, 32)),
+            ("preview_smaller", "Size -", (px + 316, py + 82, 80, 32)),
+            ("preview_larger", "Size +", (px + 402, py + 82, 80, 32)),
+            ("preview_log", "Log values", (px + 488, py + 82, 120, 32)),
+            ("preview_slower", "FPS -", (px + 614, py + 82, 75, 32)),
+            ("preview_faster", "FPS +", (px + 695, py + 82, 75, 32)),
+        ]:
+            app.button(name, label, rect, mouse)
+        ui.text(surface, self.message, (px + 18, py + 120), 15)
 
         shadow = self.spec["shadow"]
-        ui.text(surface, f"SHADOW {shadow.get('mode','frame')} | opacity {shadow.get('opacity',55)} | depth {shadow.get('depth',.18):.2f} | width {shadow.get('width',1):.2f} | offset {shadow.get('offset',[0,0])}", (548,326),18)
-        controls = [("toggle", "On / off"), ("lighter", "Lighter"), ("darker", "Darker"), ("flatter", "Flatter"), ("deeper", "Deeper"), ("narrower", "Narrower"), ("wider", "Wider"), ("left", "Left"), ("right", "Right"), ("up", "Up"), ("down", "Down"), ("counterclockwise", "Rotate CCW"), ("clockwise", "Rotate CW")]
-        for i, (name,label) in enumerate(controls):
-            app.button("preview_shadow_"+name,label,(548+(i%6)*125,355+(i//6)*48,117,38),mouse)
-
-        ui.text(surface, f"Angle: {shadow.get('angle',0)} degrees | 5 degrees per click", (685,459),18)
+        ui.text(
+            surface,
+            f"SHADOW {shadow.get('mode','frame')} | opacity {shadow.get('opacity',55)} | depth {shadow.get('depth',.18):.2f} | width {shadow.get('width',1):.2f} | offset {shadow.get('offset',[0,0])} | angle {shadow.get('angle',0)} deg",
+            (px + 18, py + 144),
+            16,
+        )
+        controls = [
+            ("toggle", "On / off"), ("lighter", "Lighter"), ("darker", "Darker"),
+            ("flatter", "Flatter"), ("deeper", "Deeper"), ("narrower", "Narrower"), ("wider", "Wider"),
+            ("left", "Left"), ("right", "Right"), ("up", "Up"), ("down", "Down"),
+            ("counterclockwise", "Rot CCW"), ("clockwise", "Rot CW"),
+        ]
+        for i, (name, label) in enumerate(controls):
+            app.button("preview_shadow_" + name, label, (px + 18 + (i % 7) * 108, py + 168 + (i // 7) * 36, 102, 31), mouse)

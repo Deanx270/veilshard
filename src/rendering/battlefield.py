@@ -76,8 +76,12 @@ class Battlefield:
                 heavy=action in ("heavy","special")
                 hit_state = "hit_heavy" if heavy and ("hit_heavy" in self.actors[target].clips or "hurt_heavy" in self.actors[target].clips) else "hit"
                 self.actors[target].trigger(hit_state)
-                direction = 1 if target == "opponent" else -1
-                self.camera.impact(2.4 if heavy else 1.1, direction=direction)
+                direction = 1
+                if source == "opponent":
+                    strength = max(1.8, round(1.7 + max(1, effect.amount) * 0.1, 2)) if heavy else max(0.9, min(1.45, round(0.6 + max(1, effect.amount) * 0.1, 2)))
+                else:
+                    strength = 2.4 if heavy else 1.1
+                self.camera.impact(strength, direction=direction)
                 self.reactions[target]=(0.30, 36 if heavy else 19)
 
     def update(self, dt: float):

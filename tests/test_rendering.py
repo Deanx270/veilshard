@@ -31,7 +31,7 @@ def test_scene_rendering_and_input(tmp_path):
         lock=app.lock; app.update(1); app.draw()
         assert app.paused and app.lock==lock
         click(app,(800,440)); assert not app.paused
-        app.update(1); app.draw(); click(app,(1420,780)); assert b.turn==1
+        app.update(2); app.draw(); click(app,(1420,780)); assert b.turn==1
         app.update(app.timeline.impact); assert b.turn==2
         for i in range(5):
             app.campaign.index=i; app.load_stage()

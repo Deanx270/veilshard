@@ -38,7 +38,7 @@ class Battle:
         self.player = Fighter(30, 30)
         self.enemy = Fighter(stage["enemy"]["hp"], stage["enemy"]["hp"])
         self.deck = Deck.starting(cards, random.Random(seed))
-        self.plan = EnemyPlan(stage["enemy"])
+        self.plan = EnemyPlan(stage["enemy"], random.Random(seed))
         self.intent = self.plan.next(self.enemy.hp, self.enemy.max_hp)
         self.status = "active"
         self.turn = 0
@@ -75,7 +75,7 @@ class Battle:
         self.deck.discard_hand()
         self.enemy.block = 0
         action = self.intent
-        if action.kind in ("attack", "special"):
+        if action.kind in ("attack", "heavy", "special"):
             effects = [Effect("player", "damage", self.player.damage(action.amount))]
         elif action.kind == "defend":
             self.enemy.block += action.amount

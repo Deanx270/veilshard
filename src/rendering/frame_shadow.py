@@ -94,7 +94,9 @@ class FrameShadows:
         bounds = strips[0][1].unionall([r for _,r in strips])
         shadow = pygame.Surface(bounds.size,pygame.SRCALPHA)
         for row, target in strips:
-            strip = pygame.transform.smoothscale(mask.subsurface((0,row,96,1)),target.size)
+            strip = pygame.transform.smoothscale(mask.subsurface((0,row,96,1)),(target.width,1))
+            if target.height != 1:
+                strip = pygame.transform.scale(strip, target.size)
             shadow.blit(strip,(target.x-bounds.x,target.y-bounds.y))
         # Soften small scanline boundaries once, never during playback.
         small = pygame.transform.smoothscale(shadow,(max(1,bounds.width//2),max(1,bounds.height//2)))

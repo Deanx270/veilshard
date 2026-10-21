@@ -141,9 +141,15 @@ class BattleHUD:
         if b.player.block: ui.text(s,f"◇ BLOCK {b.player.block}",(content_x,gy-26),20,(151,207,248))
         ui.text(s,f"Draw {len(b.deck.draw_pile)}   ·   Discard {len(b.deck.discard)}",(content_x,gy+126),15,MUTED)
         # Float above the configured sprite's head, clamped to the viewport.
-        spec=c.stage['opponent']; height=spec['size'][1]*spec.get('scale',1)
-        x=max(570,min(1250,spec['position'][0]-145))
-        y=max(122,min(490,spec['position'][1]-height*spec.get('anchor',[0.5,1])[1]-100))
+        spec=c.stage['opponent']; scale=spec.get('scale',1)
+        width=spec['size'][0]*scale; height=spec['size'][1]*scale
+        anchor=spec.get('anchor',[0.5,1])
+        ground=spec.get('shadow',{}).get('ground',anchor)
+        crop=spec.get('shadow',{}).get('crop',[0,0,1,1])
+        actor_x=spec['position'][0]+(ground[0]-anchor[0])*width
+        head_y=spec['position'][1]-height*anchor[1]+height*crop[1]
+        x=max(570,min(1250,round(actor_x-145)))
+        y=max(122,min(490,round(head_y-100)))
         glass(s,(x-14,y-8,320,101),145)
         ui.text(s,c.stage['enemy']['name'],(x,y),22,(244,230,210))
         bar(s,(x+4,y+33,285,10),self.display_hp.get("enemy",b.enemy.hp),b.enemy.max_hp,(227,113,105))

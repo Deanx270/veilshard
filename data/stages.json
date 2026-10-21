@@ -20,7 +20,8 @@
           7
         ]
       ],
-      "rage_pattern": null
+      "rage_pattern": null,
+      "heavy_chance": 0.5
     },
     "background": {
       "manifest": "assets/backgrounds/stage_01/Parallax-Manifest.json",
@@ -37,7 +38,7 @@
       }
     },
     "player": {
-      "path": "assets/characters/char_01/idle/idle1.png",
+      "path": "assets/characters/char_01/idle/idle_01.png",
       "position": [
         741,
         939
@@ -56,41 +57,41 @@
       "animations": {
         "idle": {
           "frames": [
-            "assets/characters/char_01/idle/idle1.png",
-            "assets/characters/char_01/idle/idle2.png",
-            "assets/characters/char_01/idle/idle3.png",
-            "assets/characters/char_01/idle/idle4.png",
-            "assets/characters/char_01/idle/idle5.png",
-            "assets/characters/char_01/idle/idle6.png",
-            "assets/characters/char_01/idle/idle7.png",
-            "assets/characters/char_01/idle/idle8.png",
-            "assets/characters/char_01/idle/idle9.png",
-            "assets/characters/char_01/idle/idle10.png",
-            "assets/characters/char_01/idle/idle11.png",
-            "assets/characters/char_01/idle/idle12.png",
-            "assets/characters/char_01/idle/idle13.png",
-            "assets/characters/char_01/idle/idle14.png"
+            "assets/characters/char_01/idle/idle_01.png",
+            "assets/characters/char_01/idle/idle_02.png",
+            "assets/characters/char_01/idle/idle_03.png",
+            "assets/characters/char_01/idle/idle_04.png",
+            "assets/characters/char_01/idle/idle_05.png",
+            "assets/characters/char_01/idle/idle_06.png",
+            "assets/characters/char_01/idle/idle_07.png",
+            "assets/characters/char_01/idle/idle_08.png",
+            "assets/characters/char_01/idle/idle_09.png",
+            "assets/characters/char_01/idle/idle_10.png",
+            "assets/characters/char_01/idle/idle_11.png",
+            "assets/characters/char_01/idle/idle_12.png",
+            "assets/characters/char_01/idle/idle_13.png",
+            "assets/characters/char_01/idle/idle_14.png"
           ],
           "fps": 10,
           "loop": true
         },
         "attack": {
           "frames": [
-            "assets/characters/char_01/attack/attack1.png",
-            "assets/characters/char_01/attack/attack2.png",
-            "assets/characters/char_01/attack/attack3.png",
-            "assets/characters/char_01/attack/attack4.png",
-            "assets/characters/char_01/attack/attack5.png",
-            "assets/characters/char_01/attack/attack6.png",
-            "assets/characters/char_01/attack/attack7.png",
-            "assets/characters/char_01/attack/attack8.png",
-            "assets/characters/char_01/attack/attack9.png",
-            "assets/characters/char_01/attack/attack10.png",
-            "assets/characters/char_01/attack/attack11.png",
-            "assets/characters/char_01/attack/attack12.png",
-            "assets/characters/char_01/attack/attack13.png",
-            "assets/characters/char_01/attack/attack14.png",
-            "assets/characters/char_01/attack/attack15.png"
+            "assets/characters/char_01/attack/attack_01.png",
+            "assets/characters/char_01/attack/attack_02.png",
+            "assets/characters/char_01/attack/attack_03.png",
+            "assets/characters/char_01/attack/attack_04.png",
+            "assets/characters/char_01/attack/attack_05.png",
+            "assets/characters/char_01/attack/attack_06.png",
+            "assets/characters/char_01/attack/attack_07.png",
+            "assets/characters/char_01/attack/attack_08.png",
+            "assets/characters/char_01/attack/attack_09.png",
+            "assets/characters/char_01/attack/attack_10.png",
+            "assets/characters/char_01/attack/attack_11.png",
+            "assets/characters/char_01/attack/attack_12.png",
+            "assets/characters/char_01/attack/attack_13.png",
+            "assets/characters/char_01/attack/attack_14.png",
+            "assets/characters/char_01/attack/attack_15.png"
           ],
           "fps": 10,
           "loop": false,
@@ -106,20 +107,20 @@
         },
         "heavy": {
           "frames": [
-            "assets/characters/char_01/attack/attack1.png",
-            "assets/characters/char_01/attack/attack2.png",
-            "assets/characters/char_01/attack/attack3.png",
-            "assets/characters/char_01/attack/attack4.png",
-            "assets/characters/char_01/attack/attack5.png",
-            "assets/characters/char_01/attack/attack6.png",
-            "assets/characters/char_01/attack/attack7.png",
-            "assets/characters/char_01/attack/attack8.png",
-            "assets/characters/char_01/attack/attack9.png",
-            "assets/characters/char_01/attack/attack11.png",
-            "assets/characters/char_01/attack/attack12-heavy.png",
-            "assets/characters/char_01/attack/attack13-heavy.png",
-            "assets/characters/char_01/attack/attack14.png",
-            "assets/characters/char_01/attack/attack15.png"
+            "assets/characters/char_01/attack/attack_01.png",
+            "assets/characters/char_01/attack/attack_02.png",
+            "assets/characters/char_01/attack/attack_03.png",
+            "assets/characters/char_01/attack/attack_04.png",
+            "assets/characters/char_01/attack/attack_05.png",
+            "assets/characters/char_01/attack/attack_06.png",
+            "assets/characters/char_01/attack/attack_07.png",
+            "assets/characters/char_01/attack/attack_08.png",
+            "assets/characters/char_01/attack/attack_09.png",
+            "assets/characters/char_01/attack/attack_11.png",
+            "assets/characters/char_01/attack/attack_12_heavy.png",
+            "assets/characters/char_01/attack/attack_13_heavy.png",
+            "assets/characters/char_01/attack/attack_14.png",
+            "assets/characters/char_01/attack/attack_15.png"
           ],
           "fps": 10,
           "loop": false,
@@ -135,13 +136,13 @@
         },
         "hit": {
           "frames": [
-            "assets/characters/char_01/hurt/hurt2.png",
-            "assets/characters/char_01/hurt/hurt3.png",
-            "assets/characters/char_01/hurt/hurt4.png",
-            "assets/characters/char_01/hurt/hurt11.png",
-            "assets/characters/char_01/hurt/hurt13.png",
-            "assets/characters/char_01/hurt/hurt15.png",
-            "assets/characters/char_01/hurt/hurt16.png"
+            "assets/characters/char_01/hurt/hurt_02.png",
+            "assets/characters/char_01/hurt/hurt_03.png",
+            "assets/characters/char_01/hurt/hurt_04.png",
+            "assets/characters/char_01/hurt/hurt_11.png",
+            "assets/characters/char_01/hurt/hurt_13.png",
+            "assets/characters/char_01/hurt/hurt_15.png",
+            "assets/characters/char_01/hurt/hurt_16.png"
           ],
           "fps": 10,
           "loop": false,
@@ -152,20 +153,20 @@
         },
         "hit_heavy": {
           "frames": [
-            "assets/characters/char_01/hurt/hurt1.png",
-            "assets/characters/char_01/hurt/hurt3.png",
-            "assets/characters/char_01/hurt/hurt5.png",
-            "assets/characters/char_01/hurt/hurt6.png",
-            "assets/characters/char_01/hurt/hurt7.png",
-            "assets/characters/char_01/hurt/hurt8.png",
-            "assets/characters/char_01/hurt/hurt9.png",
-            "assets/characters/char_01/hurt/hurt10.png",
-            "assets/characters/char_01/hurt/hurt11.png",
-            "assets/characters/char_01/hurt/hurt12.png",
-            "assets/characters/char_01/hurt/hurt13.png",
-            "assets/characters/char_01/hurt/hurt14.png",
-            "assets/characters/char_01/hurt/hurt15.png",
-            "assets/characters/char_01/hurt/hurt16.png"
+            "assets/characters/char_01/hurt/hurt_01.png",
+            "assets/characters/char_01/hurt/hurt_03.png",
+            "assets/characters/char_01/hurt/hurt_05.png",
+            "assets/characters/char_01/hurt/hurt_06.png",
+            "assets/characters/char_01/hurt/hurt_07.png",
+            "assets/characters/char_01/hurt/hurt_08.png",
+            "assets/characters/char_01/hurt/hurt_09.png",
+            "assets/characters/char_01/hurt/hurt_10.png",
+            "assets/characters/char_01/hurt/hurt_11.png",
+            "assets/characters/char_01/hurt/hurt_12.png",
+            "assets/characters/char_01/hurt/hurt_13.png",
+            "assets/characters/char_01/hurt/hurt_14.png",
+            "assets/characters/char_01/hurt/hurt_15.png",
+            "assets/characters/char_01/hurt/hurt_16.png"
           ],
           "fps": 10,
           "loop": false,
@@ -176,21 +177,21 @@
         },
         "defend": {
           "frames": [
-            "assets/characters/char_01/defend/defend1.png",
-            "assets/characters/char_01/defend/defend2.png",
-            "assets/characters/char_01/defend/defend3.png",
-            "assets/characters/char_01/defend/defend4.png",
-            "assets/characters/char_01/defend/defend5.png",
-            "assets/characters/char_01/defend/defend6.png",
-            "assets/characters/char_01/defend/defend7.png",
-            "assets/characters/char_01/defend/defend8.png",
-            "assets/characters/char_01/defend/defend9.png",
-            "assets/characters/char_01/defend/defend10.png",
-            "assets/characters/char_01/defend/defend11.png",
-            "assets/characters/char_01/defend/defend12.png",
-            "assets/characters/char_01/defend/defend13.png",
-            "assets/characters/char_01/defend/defend14.png",
-            "assets/characters/char_01/defend/defend15.png"
+            "assets/characters/char_01/defend/defend_01.png",
+            "assets/characters/char_01/defend/defend_02.png",
+            "assets/characters/char_01/defend/defend_03.png",
+            "assets/characters/char_01/defend/defend_04.png",
+            "assets/characters/char_01/defend/defend_05.png",
+            "assets/characters/char_01/defend/defend_06.png",
+            "assets/characters/char_01/defend/defend_07.png",
+            "assets/characters/char_01/defend/defend_08.png",
+            "assets/characters/char_01/defend/defend_09.png",
+            "assets/characters/char_01/defend/defend_10.png",
+            "assets/characters/char_01/defend/defend_11.png",
+            "assets/characters/char_01/defend/defend_12.png",
+            "assets/characters/char_01/defend/defend_13.png",
+            "assets/characters/char_01/defend/defend_14.png",
+            "assets/characters/char_01/defend/defend_15.png"
           ],
           "fps": 10,
           "loop": false,
@@ -202,28 +203,24 @@
         },
         "heal": {
           "frames": [
-            "assets/characters/char_01/heal/heal1.png",
-            "assets/characters/char_01/heal/heal2.png",
-            "assets/characters/char_01/heal/heal3.png",
-            "assets/characters/char_01/heal/heal4.png",
-            "assets/characters/char_01/heal/heal5.png",
-            "assets/characters/char_01/heal/heal6.png",
-            "assets/characters/char_01/heal/heal7.png",
-            "assets/characters/char_01/heal/heal8.png",
-            "assets/characters/char_01/heal/heal9.png",
-            "assets/characters/char_01/heal/heal10.png",
-            "assets/characters/char_01/heal/heal11.png",
-            "assets/characters/char_01/heal/heal12.png",
-            "assets/characters/char_01/heal/heal13.png",
-            "assets/characters/char_01/heal/heal14.png"
+            "assets/characters/char_01/heal/heal_01.png",
+            "assets/characters/char_01/heal/heal_02.png",
+            "assets/characters/char_01/heal/heal_03.png",
+            "assets/characters/char_01/heal/heal_04.png",
+            "assets/characters/char_01/heal/heal_05.png",
+            "assets/characters/char_01/heal/heal_06.png",
+            "assets/characters/char_01/heal/heal_07.png",
+            "assets/characters/char_01/heal/heal_08.png",
+            "assets/characters/char_01/heal/heal_09.png",
+            "assets/characters/char_01/heal/heal_10.png",
+            "assets/characters/char_01/heal/heal_11.png",
+            "assets/characters/char_01/heal/heal_12.png",
+            "assets/characters/char_01/heal/heal_13.png",
+            "assets/characters/char_01/heal/heal_14.png"
           ],
           "fps": 10,
           "loop": false,
           "impact_frame": 7,
-          "canvas_offset": [
-            12,
-            -57
-          ],
           "source_size": [
             1920,
             1080
@@ -239,11 +236,11 @@
           -3,
           -21
         ],
-        "opacity": 35,
+        "opacity": 60,
         "enabled": true,
         "mode": "frame",
         "width": 0.75,
-        "depth": 0.3,
+        "depth": 0.54,
         "ground": [
           0.29,
           0.773
@@ -254,41 +251,174 @@
           0.24,
           0.54
         ],
-        "angle": -55,
+        "angle": -105,
         "foot_locked": true
       },
       "procedural_motion": false,
-      "placeholder_projectile": false
+      "placeholder_projectile": false,
+      "placeholder_hit_effect": false
     },
     "opponent": {
-      "path": "assets/enemies/stage_01.png",
+      "path": "assets/enemies/enemy_01/idle/idle_01.png",
       "position": [
-        1100,
-        580
+        711,
+        859
       ],
       "anchor": [
         0.5,
-        0.95
+        1.0
       ],
       "size": [
-        270,
-        360
+        1363,
+        669
       ],
       "scale": 1.0,
       "render_order": 10,
-      "flip_x": true,
-      "animations": {},
+      "flip_x": false,
+      "animations": {
+        "idle": {
+          "frames": [
+            "assets/enemies/enemy_01/idle/idle_01.png",
+            "assets/enemies/enemy_01/idle/idle_02.png",
+            "assets/enemies/enemy_01/idle/idle_03.png",
+            "assets/enemies/enemy_01/idle/idle_04.png",
+            "assets/enemies/enemy_01/idle/idle_05.png",
+            "assets/enemies/enemy_01/idle/idle_06.png",
+            "assets/enemies/enemy_01/idle/idle_07.png",
+            "assets/enemies/enemy_01/idle/idle_08.png",
+            "assets/enemies/enemy_01/idle/idle_09.png",
+            "assets/enemies/enemy_01/idle/idle_10.png",
+            "assets/enemies/enemy_01/idle/idle_11.png",
+            "assets/enemies/enemy_01/idle/idle_12.png",
+            "assets/enemies/enemy_01/idle/idle_13.png",
+            "assets/enemies/enemy_01/idle/idle_14.png",
+            "assets/enemies/enemy_01/idle/idle_15.png"
+          ],
+          "fps": 10,
+          "loop": true
+        },
+        "attack": {
+          "frames": [
+            "assets/enemies/enemy_01/attack/attack_01.png",
+            "assets/enemies/enemy_01/attack/attack_02.png",
+            "assets/enemies/enemy_01/attack/attack_04.png",
+            "assets/enemies/enemy_01/attack/attack_12.png",
+            "assets/enemies/enemy_01/attack/attack_13.png",
+            "assets/enemies/enemy_01/attack/attack_14.png",
+            "assets/enemies/enemy_01/attack/attack_15.png",
+            "assets/enemies/enemy_01/attack/attack_16.png",
+            "assets/enemies/enemy_01/attack/attack_17.png",
+            "assets/enemies/enemy_01/attack/attack_18.png",
+            "assets/enemies/enemy_01/attack/attack_19.png",
+            "assets/enemies/enemy_01/attack/attack_20.png",
+            "assets/enemies/enemy_01/attack/attack_21.png",
+            "assets/enemies/enemy_01/attack/attack_22.png",
+            "assets/enemies/enemy_01/attack/attack_23.png"
+          ],
+          "fps": 10,
+          "loop": false,
+          "impact_frame": 6
+        },
+        "heavy": {
+          "frames": [
+            "assets/enemies/enemy_01/attack/attack_01.png",
+            "assets/enemies/enemy_01/attack/attack_02.png",
+            "assets/enemies/enemy_01/attack/attack_03.png",
+            "assets/enemies/enemy_01/attack/attack_04.png",
+            "assets/enemies/enemy_01/attack/attack_05.png",
+            "assets/enemies/enemy_01/attack/attack_06.png",
+            "assets/enemies/enemy_01/attack/attack_07.png",
+            "assets/enemies/enemy_01/attack/attack_08.png",
+            "assets/enemies/enemy_01/attack/attack_09.png",
+            "assets/enemies/enemy_01/attack/attack_10.png",
+            "assets/enemies/enemy_01/attack/attack_11.png",
+            "assets/enemies/enemy_01/attack/attack_12.png",
+            "assets/enemies/enemy_01/attack/attack_13.png",
+            "assets/enemies/enemy_01/attack/attack_14.png",
+            "assets/enemies/enemy_01/attack/attack_15.png",
+            "assets/enemies/enemy_01/attack/attack_16.png",
+            "assets/enemies/enemy_01/attack/attack_17.png",
+            "assets/enemies/enemy_01/attack/attack_18.png",
+            "assets/enemies/enemy_01/attack/attack_19.png",
+            "assets/enemies/enemy_01/attack/attack_20.png",
+            "assets/enemies/enemy_01/attack/attack_21.png",
+            "assets/enemies/enemy_01/attack/attack_22.png",
+            "assets/enemies/enemy_01/attack/attack_23.png"
+          ],
+          "fps": 10,
+          "loop": false,
+          "impact_frame": 14
+        },
+        "hit": {
+          "frames": [
+            "assets/enemies/enemy_01/hurt/hurt_01.png",
+            "assets/enemies/enemy_01/hurt/hurt_03.png",
+            "assets/enemies/enemy_01/hurt/hurt_05.png",
+            "assets/enemies/enemy_01/hurt/hurt_07.png",
+            "assets/enemies/enemy_01/hurt/hurt_14.png",
+            "assets/enemies/enemy_01/hurt/hurt_16.png",
+            "assets/enemies/enemy_01/hurt/hurt_18.png",
+            "assets/enemies/enemy_01/hurt/hurt_19.png"
+          ],
+          "fps": 10,
+          "loop": false
+        },
+        "hit_heavy": {
+          "frames": [
+            "assets/enemies/enemy_01/hurt/hurt_01.png",
+            "assets/enemies/enemy_01/hurt/hurt_02.png",
+            "assets/enemies/enemy_01/hurt/hurt_03.png",
+            "assets/enemies/enemy_01/hurt/hurt_04.png",
+            "assets/enemies/enemy_01/hurt/hurt_05.png",
+            "assets/enemies/enemy_01/hurt/hurt_06.png",
+            "assets/enemies/enemy_01/hurt/hurt_07.png",
+            "assets/enemies/enemy_01/hurt/hurt_08.png",
+            "assets/enemies/enemy_01/hurt/hurt_09.png",
+            "assets/enemies/enemy_01/hurt/hurt_10.png",
+            "assets/enemies/enemy_01/hurt/hurt_11.png",
+            "assets/enemies/enemy_01/hurt/hurt_12.png",
+            "assets/enemies/enemy_01/hurt/hurt_13.png",
+            "assets/enemies/enemy_01/hurt/hurt_14.png",
+            "assets/enemies/enemy_01/hurt/hurt_15.png",
+            "assets/enemies/enemy_01/hurt/hurt_16.png",
+            "assets/enemies/enemy_01/hurt/hurt_17.png",
+            "assets/enemies/enemy_01/hurt/hurt_18.png",
+            "assets/enemies/enemy_01/hurt/hurt_19.png"
+          ],
+          "fps": 10,
+          "loop": false
+        }
+      },
       "shadow": {
         "size": [
           160,
           42
         ],
         "offset": [
-          0,
-          0
+          -3,
+          -21
         ],
-        "opacity": 100
-      }
+        "opacity": 60,
+        "enabled": true,
+        "mode": "frame",
+        "width": 0.7,
+        "depth": 0.6,
+        "ground": [
+          0.815,
+          0.635
+        ],
+        "crop": [
+          0.32,
+          0.22,
+          0.62,
+          0.43
+        ],
+        "angle": 125,
+        "foot_locked": true
+      },
+      "placeholder_projectile": false,
+      "placeholder_hit_effect": false,
+      "procedural_motion": false
     },
     "camera": {
       "composition": "fixed_three_quarter",
