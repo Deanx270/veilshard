@@ -125,8 +125,15 @@ class App:
             self.pending_card=None
             self.lock=0
             self.hud.reset(c.battle)
-            self.loaded_stage=None
             self.hand=CardHand(self.ui)
+            for actor in self.battlefield.actors.values():
+                actor.state="idle"
+                actor.elapsed=0.0
+                actor.hit_time=0.0
+            if hasattr(self.battlefield.camera, "reset"):
+                self.battlefield.camera.reset()
+            self.battlefield.reactions.clear()
+            self.battlefield.motion=None
         elif name=="next": c.advance()
         elif name=="retry": c.retry()
         elif name=="menu":
