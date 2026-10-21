@@ -433,7 +433,7 @@ def test_stage_one_enemy_clips_lock_and_rightward_parallax(app):
 
     # Test normal and heavy enemy attacks: impact at attack_15, parallax right, card locked while enemy non-idle
     b = app.campaign.battle
-    for kind, amount, expected_impact, expected_hit_state in (("attack", 5, 0.6, "hit"), ("heavy", 10, 1.4, "hit_heavy")):
+    for kind, amount, expected_impact, expected_hit_state in (("attack", 5, 0.6, "hit"), ("heavy", 11, 1.4, "hit_heavy")):
         b.player.hp = 30
         b.intent = Intent(kind, amount)
         app.action("end")

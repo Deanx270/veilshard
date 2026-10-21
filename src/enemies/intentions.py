@@ -28,7 +28,7 @@ class EnemyPlan:
         self.step += 1
         heavy_chance = self.definition.get("heavy_chance", 0.0)
         if action.kind == "attack" and heavy_chance > 0 and self.rng.random() < heavy_chance:
-            multiplier = self.definition.get("heavy_multiplier", 1.4)
-            amount = self.definition.get("heavy_amount", round(action.amount * multiplier))
+            multiplier = self.definition.get("heavy_multiplier", 1.5)
+            amount = self.definition.get("heavy_amount", round(action.amount * multiplier + 1e-9))
             return Intent("heavy", amount)
         return action

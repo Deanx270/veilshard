@@ -22,7 +22,7 @@
       ],
       "rage_pattern": null,
       "heavy_chance": 0.5,
-      "heavy_multiplier": 1.4
+      "heavy_multiplier": 1.5
     },
     "background": {
       "manifest": "assets/backgrounds/stage_01/Parallax-Manifest.json",
