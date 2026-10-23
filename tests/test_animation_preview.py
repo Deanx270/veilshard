@@ -500,8 +500,11 @@ def test_stage_two_debug_menus_and_opponent_preview():
         a.load_stage()
         a.action("battle")
         a.update(.3)
-        assert a.campaign.stage.get("debug") is True
-        assert a.battlefield.background.options.get("debug_controls") is True
+        assert not a.campaign.stage.get("debug", False)
+        assert not a.battlefield.background.options.get("debug_controls", False)
+        a.draw()
+        assert "preview_toggle" not in a.buttons
+        a.campaign.stage["debug"] = True
         a.draw()
         assert "preview_toggle" in a.buttons
         a.action("preview_toggle")
@@ -510,7 +513,77 @@ def test_stage_two_debug_menus_and_opponent_preview():
         a.action("preview_switch_target")
         assert a.preview.target == "opponent"
         assert len(a.preview.paths) == 83
+        assert a.preview.spec["shadow"].get("foot_locked") is True
+        assert a.preview.spec["shadow"].get("foot_band") == 0.9
+        a.action("preview_larger")
+        expected_size = tuple(a.preview.spec["size"])
+        a.preview.original.apply_preview(a.preview)
         a.action("preview_toggle")
         assert a.preview is None
+        assert a.battlefield.actors["opponent"].size == expected_size
+        assert a.battlefield.actors["opponent"].frame().get_size() == expected_size
     finally:
         pygame.quit()
+
+def test_bold_damage_text_on_heavy_attacks(app):
+    from src.combat.battle import Effect
+    app.effects.popups.clear()
+    app.effects.add([Effect("enemy", "damage", 6)], app.campaign.stage, "attack", "player")
+    assert len(app.effects.popups) == 1
+    assert app.effects.popups[0].bold is False
+
+    app.effects.popups.clear()
+    app.effects.add([Effect("enemy", "damage", 10)], app.campaign.stage, "heavy", "player")
+    assert len(app.effects.popups) == 1
+    assert app.effects.popups[0].bold is True
+
+    app.effects.popups.clear()
+    app.effects.add([Effect("player", "damage", 14)], app.campaign.stage, "heavy", "opponent")
+    assert len(app.effects.popups) == 1
+    assert app.effects.popups[0].bold is True
+
+def test_stage_two_skips_placeholder_hit_effect_and_defend_offset():
+    from src.combat.battle import Effect
+    from src.rendering.effects import Effects
+    import json
+    stages = json.load(open("data/stages.json"))
+    s2 = stages[1]
+    effects = Effects()
+
+    effects.add([Effect("enemy", "damage", 6)], s2, "attack", "player")
+    assert len(effects.popups) == 1
+    assert len(effects.bursts) == 0
+
+    effects.popups.clear()
+    effects.add([Effect("player", "damage", 8)], s2, "attack", "opponent")
+    assert len(effects.popups) == 1
+    assert len(effects.bursts) == 0
+
+    effects.popups.clear()
+    effects.bursts.clear()
+    effects.add([Effect("enemy", "block", 7)], s2, "defend", "opponent")
+    assert len(effects.bursts) == 1
+    spec = s2["opponent"]
+    anchor = spec.get("anchor", [0.5, 1.0])
+    ground = spec.get("shadow", {}).get("ground", anchor)
+    expected_x = round(spec["position"][0] + (ground[0] - anchor[0]) * spec["size"][0] * spec.get("scale", 1.0)) - 80
+    assert effects.bursts[0]["center"][0] == expected_x
+    assert effects.popups[0].position[0] == expected_x
+
+def test_stage_two_enemy_hurt_frames_and_attack_impact():
+    import json
+    stages = json.load(open("data/stages.json"))
+    s2 = stages[1]
+    clips = s2["opponent"]["animations"]
+
+    assert clips["attack"]["impact_frame"] == 9
+    attack_frames = [p.split("/")[-1] for p in clips["attack"]["frames"]]
+    assert attack_frames[clips["attack"]["impact_frame"]] == "attack_10.png"
+
+    hit_frames = [p.split("/")[-1] for p in clips["hit"]["frames"]]
+    assert len(hit_frames) == 10
+    assert hit_frames == ["hurt_01.png", "hurt_03.png", "hurt_05.png", "hurt_07.png", "hurt_08.png", "hurt_10.png", "hurt_12.png", "hurt_14.png", "hurt_16.png", "hurt_18.png"]
+
+    hit_heavy_frames = [p.split("/")[-1] for p in clips["hit_heavy"]["frames"]]
+    assert len(hit_heavy_frames) == 19
+    assert hit_heavy_frames == [f"hurt_{i:02d}.png" for i in range(1, 20)]

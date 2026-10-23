@@ -478,22 +478,22 @@
     ],
     "enemy": {
       "name": "Frost Knight",
-      "hp": 45,
+      "hp": 60,
       "pattern": [
         [
           "attack",
           6
         ],
         [
-          "defend",
-          7
-        ],
-        [
           "attack",
           8
         ]
       ],
-      "rage_pattern": null
+      "rage_pattern": null,
+      "defend_after_attack_chance": 0.5,
+      "defend_amount": 7,
+      "bonus_attack_interval": 2,
+      "bonus_attack_amount": 1
     },
     "background": {
       "manifest": "assets/backgrounds/stage_02/manifest.json",
@@ -505,15 +505,15 @@
         "actor_layer": "ground",
         "smoothing": 9.0,
         "impact_pan": 14.0,
-        "debug_controls": true,
+        "debug_controls": false,
         "max_jitter": 10
       }
     },
     "player": {
       "path": "assets/characters/char_01/idle/idle_01.png",
       "position": [
-        741,
-        939
+        811,
+        929
       ],
       "anchor": [
         0.5,
@@ -708,7 +708,7 @@
           -3,
           -21
         ],
-        "opacity": 60,
+        "opacity": 50,
         "enabled": true,
         "mode": "frame",
         "width": 0.75,
@@ -723,44 +723,44 @@
           0.24,
           0.54
         ],
-        "angle": -105,
+        "angle": -110,
         "foot_locked": true
       },
       "procedural_motion": false,
       "placeholder_projectile": false,
-      "placeholder_hit_effect": true,
+      "placeholder_hit_effect": false,
       "lighting": {
         "enabled": true,
         "ambient": [
-          246,
-          222,
-          204
+          228,
+          236,
+          248
         ],
         "highlight": [
-          22,
-          13,
-          4
+          10,
+          16,
+          26
         ],
         "bounce": [
-          16,
           8,
-          2
+          12,
+          20
         ]
       }
     },
     "opponent": {
       "path": "assets/enemies/enemy_02/idle/idle_01.png",
       "position": [
-        1080,
-        850
+        760,
+        830
       ],
       "anchor": [
         0.5,
         1.0
       ],
       "size": [
-        921,
-        518
+        1177,
+        662
       ],
       "scale": 1.0,
       "render_order": 15,
@@ -828,7 +828,7 @@
           ],
           "fps": 12,
           "loop": false,
-          "impact_frame": 14
+          "impact_frame": 9
         },
         "defend": {
           "frames": [
@@ -851,6 +851,63 @@
           "loop": false
         },
         "hurt": {
+          "frames": [
+            "assets/enemies/enemy_02/hurt/hurt_01.png",
+            "assets/enemies/enemy_02/hurt/hurt_03.png",
+            "assets/enemies/enemy_02/hurt/hurt_05.png",
+            "assets/enemies/enemy_02/hurt/hurt_07.png",
+            "assets/enemies/enemy_02/hurt/hurt_08.png",
+            "assets/enemies/enemy_02/hurt/hurt_10.png",
+            "assets/enemies/enemy_02/hurt/hurt_12.png",
+            "assets/enemies/enemy_02/hurt/hurt_14.png",
+            "assets/enemies/enemy_02/hurt/hurt_16.png",
+            "assets/enemies/enemy_02/hurt/hurt_18.png"
+          ],
+          "fps": 10,
+          "loop": false
+        },
+        "hit": {
+          "frames": [
+            "assets/enemies/enemy_02/hurt/hurt_01.png",
+            "assets/enemies/enemy_02/hurt/hurt_03.png",
+            "assets/enemies/enemy_02/hurt/hurt_05.png",
+            "assets/enemies/enemy_02/hurt/hurt_07.png",
+            "assets/enemies/enemy_02/hurt/hurt_08.png",
+            "assets/enemies/enemy_02/hurt/hurt_10.png",
+            "assets/enemies/enemy_02/hurt/hurt_12.png",
+            "assets/enemies/enemy_02/hurt/hurt_14.png",
+            "assets/enemies/enemy_02/hurt/hurt_16.png",
+            "assets/enemies/enemy_02/hurt/hurt_18.png"
+          ],
+          "fps": 10,
+          "loop": false
+        },
+        "hit_heavy": {
+          "frames": [
+            "assets/enemies/enemy_02/hurt/hurt_01.png",
+            "assets/enemies/enemy_02/hurt/hurt_02.png",
+            "assets/enemies/enemy_02/hurt/hurt_03.png",
+            "assets/enemies/enemy_02/hurt/hurt_04.png",
+            "assets/enemies/enemy_02/hurt/hurt_05.png",
+            "assets/enemies/enemy_02/hurt/hurt_06.png",
+            "assets/enemies/enemy_02/hurt/hurt_07.png",
+            "assets/enemies/enemy_02/hurt/hurt_08.png",
+            "assets/enemies/enemy_02/hurt/hurt_09.png",
+            "assets/enemies/enemy_02/hurt/hurt_10.png",
+            "assets/enemies/enemy_02/hurt/hurt_11.png",
+            "assets/enemies/enemy_02/hurt/hurt_12.png",
+            "assets/enemies/enemy_02/hurt/hurt_13.png",
+            "assets/enemies/enemy_02/hurt/hurt_14.png",
+            "assets/enemies/enemy_02/hurt/hurt_15.png",
+            "assets/enemies/enemy_02/hurt/hurt_16.png",
+            "assets/enemies/enemy_02/hurt/hurt_17.png",
+            "assets/enemies/enemy_02/hurt/hurt_18.png",
+            "assets/enemies/enemy_02/hurt/hurt_19.png"
+          ],
+          "fps": 10,
+          "loop": false
+        },
+        "hurt_heavy": {
           "frames": [
             "assets/enemies/enemy_02/hurt/hurt_01.png",
             "assets/enemies/enemy_02/hurt/hurt_02.png",
@@ -882,35 +939,47 @@
           42
         ],
         "offset": [
-          0,
-          -10
+          4,
+          -14
         ],
-        "opacity": 60,
+        "opacity": 55,
         "enabled": true,
         "mode": "frame",
-        "width": 0.8,
-        "depth": 0.35,
-        "angle": 0
+        "width": 0.85,
+        "depth": 0.42,
+        "ground": [
+          0.851,
+          0.722
+        ],
+        "crop": [
+          0.63,
+          0.14,
+          0.34,
+          0.6
+        ],
+        "angle": -125,
+        "foot_locked": true,
+        "foot_band": 0.9
       },
       "procedural_motion": false,
       "placeholder_projectile": false,
-      "placeholder_hit_effect": true,
+      "placeholder_hit_effect": false,
       "lighting": {
         "enabled": true,
         "ambient": [
-          215,
-          230,
-          250
+          226,
+          236,
+          248
         ],
         "highlight": [
-          20,
-          25,
-          35
+          12,
+          18,
+          28
         ],
         "bounce": [
-          25,
-          35,
-          50
+          10,
+          15,
+          24
         ]
       }
     },
@@ -923,7 +992,7 @@
         430
       ]
     },
-    "debug": true
+    "debug": false
   },
   {
     "id": 3,

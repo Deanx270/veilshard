@@ -73,7 +73,7 @@ def test_lethal_action_never_allows_retaliation(app):
     assert b.status=="won" and app.campaign.scene=="battle"
     for _ in range(20): app.action("end")
     app.update(1)
-    assert app.campaign.scene=="clear" and b.player.hp==30 and b.turn==1
+    assert app.campaign.scene in ("clear", "shop") and b.player.hp==30 and b.turn==1
 
 
 @pytest.mark.parametrize("kind,effect",[("shield","block"),("heal","heal")])
@@ -96,5 +96,5 @@ def test_long_frame_and_strength(app):
     assert app.battlefield.camera.strength>1
     assert not app.effects.bursts
     from src.combat.battle import Effect
-    app.effects.add([Effect("enemy","damage",10)], app.campaign.stages[1], "heavy", "player")
+    app.effects.add([Effect("enemy","damage",10)], app.campaign.stages[2], "heavy", "player")
     assert len(app.effects.bursts[-1]["particles"])==14

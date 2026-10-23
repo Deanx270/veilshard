@@ -9,6 +9,7 @@ class Popup:
     position: tuple
     color: tuple
     age: float = 0
+    bold: bool = False
 
 class Effects:
     def __init__(self):
@@ -29,6 +30,8 @@ class Effects:
             ground = spec.get("shadow", {}).get("ground", anchor)
             actor_x = round(pos[0] + (ground[0] - anchor[0]) * width)
             actor_y = round(pos[1] + (ground[1] - anchor[1]) * height)
+            if target_key == "opponent" and effect.kind == "block":
+                actor_x -= 80
             body_h = height * spec.get("shadow", {}).get("crop", [0, 0, 1, 1])[3]
             color = {"damage":(255,150,160),"heal":(136,246,192),"block":(142,206,255),"charge":(233,199,255)}[effect.kind]
             label = {"damage":f"−{effect.amount}","heal":f"+{effect.amount} HP","block":f"+{effect.amount} BLOCK","charge":"CHARGING"}[effect.kind]
@@ -36,13 +39,14 @@ class Effects:
             heavy = action in ("heavy", "special")
             skip_burst = False
             if effect.kind == "damage":
-                if not attacker_spec.get("placeholder_hit_effect", True) or not spec.get("placeholder_hit_effect", True) or stage.get("id") == 1:
+                if not attacker_spec.get("placeholder_hit_effect", True) or not spec.get("placeholder_hit_effect", True) or stage.get("id") in (1, 2):
                     skip_burst = True
             if not skip_burst:
                 rng = random.Random(len(self.bursts) + effect.amount)
                 particles = [(rng.uniform(0, math.tau), rng.uniform(45, 140 if heavy else 90)) for _ in range(14 if heavy else 7)]
                 self.bursts.append({"kind":effect.kind,"heavy":heavy,"center":center,"color":color,"age":0.0,"particles":particles})
-            self.popups.append(Popup(label, (actor_x, actor_y-body_h*0.65), color))
+            is_bold = heavy and effect.kind == "damage"
+            self.popups.append(Popup(label, (actor_x, actor_y-body_h*0.65), color, bold=is_bold))
 
     def update(self, dt):
         for burst in self.bursts: burst["age"]+=dt
@@ -81,7 +85,12 @@ class Effects:
             layer=pygame.transform.smoothscale(layer,(size,size))
             surface.blit(layer,(x-size//2,y-size//2))
         for popup in self.popups:
+            was_bold = getattr(font, "get_bold", lambda: False)()
+            if getattr(popup, "bold", False) and hasattr(font, "set_bold"):
+                font.set_bold(True)
             label=font.render(popup.text,True,popup.color)
+            if hasattr(font, "set_bold"):
+                font.set_bold(was_bold)
             label=pygame.transform.smoothscale_by(label,1.25)
             label.set_alpha(int(255*min(1,(1.1-popup.age)*3)))
             position=(popup.position[0]-label.get_width()/2,popup.position[1]-popup.age*75)

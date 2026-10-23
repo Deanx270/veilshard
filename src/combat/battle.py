@@ -33,9 +33,9 @@ class Battle:
     Enemy Block expires at the START of its next phase, after defending
     against one full player turn. Defend creates fresh Block afterward.
     """
-    def __init__(self, stage: dict, cards: list[Card], seed: int | None = None):
+    def __init__(self, stage: dict, cards: list[Card], seed: int | None = None, player_max_hp: int = 30, turn1_bonus_energy: int = 0):
         self.stage = stage
-        self.player = Fighter(30, 30)
+        self.player = Fighter(player_max_hp, player_max_hp)
         self.enemy = Fighter(stage["enemy"]["hp"], stage["enemy"]["hp"])
         self.deck = Deck.starting(cards, random.Random(seed))
         self.plan = EnemyPlan(stage["enemy"], random.Random(seed))
@@ -43,11 +43,13 @@ class Battle:
         self.status = "active"
         self.turn = 0
         self.energy = 0
+        self.turn1_bonus_energy = turn1_bonus_energy
         self._start_turn()
 
     def _start_turn(self):
         self.turn += 1
-        self.energy = 2
+        bonus = self.turn1_bonus_energy if self.turn == 1 else 0
+        self.energy = 2 + bonus
         self.deck.draw(3)
 
     def play(self, index: int) -> list[Effect]:
@@ -75,15 +77,19 @@ class Battle:
         self.deck.discard_hand()
         self.enemy.block = 0
         action = self.intent
+        effects = []
         if action.kind in ("attack", "heavy", "special"):
-            effects = [Effect("player", "damage", self.player.damage(action.amount))]
+            effects.append(Effect("player", "damage", self.player.damage(action.amount)))
         elif action.kind == "defend":
             self.enemy.block += action.amount
-            effects = [Effect("enemy", "block", action.amount)]
+            effects.append(Effect("enemy", "block", action.amount))
         elif action.kind == "heal":
-            effects = [Effect("enemy", "heal", self.enemy.heal(action.amount))]
+            effects.append(Effect("enemy", "heal", self.enemy.heal(action.amount)))
         else:
-            effects = [Effect("enemy", "charge", 0)]
+            effects.append(Effect("enemy", "charge", 0))
+        if getattr(action, "defend_amount", 0) > 0 and action.kind != "defend":
+            self.enemy.block += action.defend_amount
+            effects.append(Effect("enemy", "block", action.defend_amount))
         self.player.block = 0
         if self.player.hp == 0:
             self.status = "lost"

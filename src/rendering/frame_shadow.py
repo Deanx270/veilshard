@@ -3,19 +3,40 @@ import math
 import pygame
 
 
+_SHARED_SHADOW_CACHE = {}
+
+
 class FrameShadows:
     def __init__(self, frames, config):
         self.config = config
         self.cache = {}
-        shared = {}
+        cfg_key = (
+            config.get("mode"),
+            tuple(config.get("ground", [.5, 1])),
+            config.get("width", 1.0),
+            config.get("depth", .18),
+            config.get("angle", 0),
+            config.get("foot_locked", False),
+            config.get("foot_band", .80),
+            tuple(config.get("crop", [0, 0, 1, 1])),
+        )
         for frame in frames:
-            if id(frame) not in self.cache:
-                if config.get("mode") == "contact":
-                    size = frame.get_size()
-                    if size not in shared: shared[size] = self.build_contact(frame)
-                    self.cache[id(frame)] = shared[size]
+            fid = id(frame)
+            if fid not in self.cache:
+                ck = (fid, cfg_key)
+                if ck in _SHARED_SHADOW_CACHE:
+                    self.cache[fid] = _SHARED_SHADOW_CACHE[ck]
                 else:
-                    self.cache[id(frame)] = self.build(frame)
+                    if config.get("mode") == "contact":
+                        size = frame.get_size()
+                        size_key = (size, cfg_key)
+                        if size_key not in _SHARED_SHADOW_CACHE:
+                            _SHARED_SHADOW_CACHE[size_key] = self.build_contact(frame)
+                        res = _SHARED_SHADOW_CACHE[size_key]
+                    else:
+                        res = self.build(frame)
+                    _SHARED_SHADOW_CACHE[ck] = res
+                    self.cache[fid] = res
 
     def build_contact(self, frame):
         """One feathered contact patch per canvas size, independent of the pose."""
@@ -66,8 +87,9 @@ class FrameShadows:
 
     def build_grounded(self, frame, rect):
         # Inspect only the lower character region, excluding distant spell VFX.
-        band = pygame.Rect(rect.x, rect.y+round(rect.height*.80), rect.width,
-                           max(1, round(rect.height*.20))).clip(rect)
+        band_start = self.config.get("foot_band", .80)
+        band = pygame.Rect(rect.x, rect.y+round(rect.height*band_start), rect.width,
+                           max(1, round(rect.height*(1.0-band_start)))).clip(rect)
         feet = frame.subsurface(band).get_bounding_rect(min_alpha=128).move(band.topleft)
         ground_y = feet.bottom if feet.width else rect.bottom
         ground_x = feet.centerx if feet.width else rect.centerx
