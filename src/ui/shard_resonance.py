@@ -10,7 +10,7 @@ MUTED=(180,185,205)
 
 ACCENTS = {"hp":(241,133,161), "attack":FROST, "shield":(127,195,246),
            "heavy":GLACIAL, "heal":(129,221,173), "energy":(238,206,125)}
-SUMMARY = {"hp":"+5 maximum health", "attack":"+2 Magic · both ice spells", "shield":"+2 Shield Block",
+SUMMARY = {"hp":"+5 maximum health", "attack":"+2 Magic", "shield":"+2 Shield Block",
            "heavy":"Amplify Glacial Bolt", "heal":"+2 healing", "energy":"+1 energy on the first turn"}
 
 

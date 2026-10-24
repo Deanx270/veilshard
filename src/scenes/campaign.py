@@ -14,7 +14,7 @@ SHOP_CATALOG = {
     },
     "attack": {
         "name": "Frost Focus",
-        "desc": "+2 Magic for both ice spells",
+        "desc": "+2 Magic",
         "base_cost": 45,
         "cost_inc": 20,
         "max_level": 5,
