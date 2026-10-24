@@ -16,7 +16,8 @@ class AnimationPreview:
         self.original = original
         self.target = target
         self.spec = copy.deepcopy(original.spec)
-        self.spec["anchor"] = [0.5, 1.0]
+        self.spec["anchor"] = list(original.spec.get("anchor", [0.5, 1.0]))
+        self.state = "idle"
         self.stage_id = stage_id
         if folder:
             target_dir = folder
@@ -39,6 +40,8 @@ class AnimationPreview:
         self.sources = [pygame.image.load(str(path)).convert_alpha() for path in self.paths]
         if self.spec.get("flip_x", False):
             self.sources = [pygame.transform.flip(s, True, False) for s in self.sources]
+        self.base_source = list(self.spec.get("source_size", self.sources[0].get_size()))
+        self.base_height = self.base_source[1]
         self.height = round(original.size[1])
         self.frames = []
         self.elapsed = 0.0
@@ -47,6 +50,9 @@ class AnimationPreview:
         self.index = 0
         self.message = "Auto-saves character & enemy properties to stages.json on F6 close / Tab switch."
         self.resize(1)
+
+    def frame_index(self):
+        return self.index
 
     @property
     def order(self):
@@ -57,8 +63,9 @@ class AnimationPreview:
 
     def resize(self, factor):
         self.height = max(40, min(1600, round(self.height * factor)))
-        self.frames = [pygame.transform.smoothscale(frame, (max(1, round(frame.get_width() * self.height / frame.get_height())), self.height)) for frame in self.sources]
-        self.spec["size"] = list(self.frames[0].get_size())
+        scale = self.height / self.base_height
+        self.frames = [pygame.transform.smoothscale(frame, (max(1, round(frame.get_width() * scale)), max(1, round(frame.get_height() * scale)))) for frame in self.sources]
+        self.spec["size"] = [max(1, round(self.base_source[0] * scale)), max(1, round(self.base_source[1] * scale))]
         self.spec["scale"] = 1.0
         self.rebuild_shadows()
 
@@ -131,22 +138,23 @@ class AnimationPreview:
         frame = self.frames[self.index]
         x, y = (self.spec["position"][i] + displacement[i] for i in range(2))
         fname = self.paths[self.index].name.lower()
-        if fname.startswith("attack"):
-            clip = "attack"
-        elif fname.startswith("hurt") or fname.startswith("hit"):
-            clip = "hit" if "hit" in self.spec.get("animations", {}) else "hurt"
-        elif fname.startswith("defend") or fname.startswith("block"):
+        if "attack" in fname or "heavy" in fname or "light" in fname:
+            clip = "heavy" if "heavy" in fname else ("special" if "light" in fname else "attack")
+        elif "hurt" in fname or "hit" in fname:
+            clip = "hit_heavy" if "heavy" in fname else ("hit" if "hit" in self.spec.get("animations", {}) else "hurt")
+        elif "defend" in fname or "block" in fname or "charge" in fname:
             clip = "defend" if "defend" in self.spec.get("animations", {}) else "block"
-        elif fname.startswith("heal"):
+        elif "heal" in fname:
             clip = "heal"
         else:
             clip = "idle"
         config = self.spec.get("animations", {}).get(clip, {})
         offset = config.get("canvas_offset", [0, 0])
-        source = config.get("source_size", frame.get_size())
-        top_left = (round(x - frame.get_width() / 2 + offset[0] * frame.get_width() / source[0]),
-                    round(y - frame.get_height() + offset[1] * frame.get_height() / source[1]))
-        shadow_origin = (round(x - frame.get_width() / 2), round(y - frame.get_height())) if self.spec["shadow"].get("mode") == "contact" else top_left
+        scale = self.height / self.base_height
+        anchor = self.spec.get("anchor", [0.5, 1.0])
+        top_left = (round(x - frame.get_width() * anchor[0] + offset[0] * scale),
+                    round(y - frame.get_height() * anchor[1] + offset[1] * scale))
+        shadow_origin = (round(x - frame.get_width() * anchor[0]), round(y - frame.get_height() * anchor[1])) if self.spec["shadow"].get("mode") == "contact" else top_left
         self.frame_shadows.draw(surface, frame, shadow_origin)
         surface.blit(frame, top_left)
 

@@ -30,6 +30,12 @@ class Effects:
             ground = spec.get("shadow", {}).get("ground", anchor)
             actor_x = round(pos[0] + (ground[0] - anchor[0]) * width)
             actor_y = round(pos[1] + (ground[1] - anchor[1]) * height)
+            clip_name = "defend" if action in ("block", "defend") else action
+            anim_config = spec.get("animations", {}).get(clip_name, {})
+            offset = anim_config.get("canvas_offset", [0, 0])
+            base_source = spec.get("source_size", [1920, 1080])
+            actor_x += round(offset[0] * width / base_source[0])
+            actor_y += round(offset[1] * height / base_source[1])
             if target_key == "opponent" and effect.kind == "block":
                 actor_x -= 80
             body_h = height * spec.get("shadow", {}).get("crop", [0, 0, 1, 1])[3]

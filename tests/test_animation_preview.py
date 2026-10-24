@@ -458,21 +458,14 @@ def test_stage_one_enemy_clips_lock_and_rightward_parallax(app):
         app.update(0.05)
         assert app.background.shift[0] > 0
 
-        # While enemy is still in attack animation after impact, player cannot play cards
+        # While enemy is still in attack animation after impact, cards are not drawn yet
         assert enemy.state == kind and app.lock > 0
-        b.deck.hand = [next(c for c in app.campaign.cards if c.id == "attack")]
-        app.hand.sync(b.deck.hand)
-        app.draw()
-        pose = app.hand.views[0].pose
-        area = viewport(app.window.get_size())
-        pos = (round(area.x + pose.x * area.width / 1600), round(area.y + pose.y * area.height / 900))
-        enemy_hp_before = b.enemy.hp
-        app.event(pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=1, pos=pos))
-        assert app.pending_card is None and b.enemy.hp == enemy_hp_before
+        assert app.visible_hand() == []
 
         # Finish animations
         app.update(app.lock + 0.05)
         assert enemy.state == "idle" and player.state == "idle" and not app.lock
+        assert len(app.visible_hand()) == 3
 
 
 def test_stage_one_debug_menu_disabled_by_default():
@@ -491,7 +484,6 @@ def test_stage_one_debug_menu_disabled_by_default():
         assert not a.battlefield.camera.debug
     finally:
         pygame.quit()
-
 def test_stage_two_debug_menus_and_opponent_preview():
     a = App()
     try:
@@ -524,7 +516,6 @@ def test_stage_two_debug_menus_and_opponent_preview():
         assert a.battlefield.actors["opponent"].frame().get_size() == expected_size
     finally:
         pygame.quit()
-
 def test_bold_damage_text_on_heavy_attacks(app):
     from src.combat.battle import Effect
     app.effects.popups.clear()
@@ -587,3 +578,118 @@ def test_stage_two_enemy_hurt_frames_and_attack_impact():
     hit_heavy_frames = [p.split("/")[-1] for p in clips["hit_heavy"]["frames"]]
     assert len(hit_heavy_frames) == 19
     assert hit_heavy_frames == [f"hurt_{i:02d}.png" for i in range(1, 20)]
+
+def test_stage_three_stormcaller_animations_and_shake():
+    import json
+    stages = json.load(open("data/stages.json"))
+    s3 = stages[2]
+    assert s3["debug"] is False
+    assert s3["background"]["parallax"]["debug_controls"] is False
+
+    clips = s3["opponent"]["animations"]
+
+    # Normal hurt skips every 2nd frame (9 frames)
+    hit_frames = [p.split("/")[-1] for p in clips["hit"]["frames"]]
+    assert len(hit_frames) == 9
+    assert hit_frames == [f"hurt_{i:02d}.png" for i in range(1, 18, 2)]
+
+    # Heavy hurt plays whole animation (17 frames)
+    hit_heavy_frames = [p.split("/")[-1] for p in clips["hit_heavy"]["frames"]]
+    assert len(hit_heavy_frames) == 17
+    assert hit_heavy_frames == [f"hurt_{i:02d}.png" for i in range(1, 18)]
+
+    # Normal attack impact at 10th frame (index 9)
+    assert clips["attack"]["impact_frame"] == 9
+
+    # Charge moved 170 pixels to right, block effect starts at 13th frame (index 12)
+    assert clips["defend"]["canvas_offset"] == [170, 0]
+    assert clips["defend"]["impact_frame"] == 12
+
+    # Heavy attack 2670x1280 canvas with downward shift reverted to align with idle, impact at 17th frame (index 16)
+    assert clips["heavy"]["canvas_offset"] == [0, -60]
+    assert clips["heavy"]["source_size"] == [2670, 1280]
+    assert clips["heavy"]["impact_frame"] == 16
+
+    # Battlefield thunderfall shake values test
+    from src.rendering.battlefield import Battlefield
+    from unittest.mock import MagicMock
+    bf = MagicMock(spec=Battlefield)
+    bf.actors = {"opponent": MagicMock()}
+    bf.thunderfall_shake_y = Battlefield.thunderfall_shake_y.__get__(bf, Battlefield)
+
+    bf.actors["opponent"].state = "heavy"
+    # 16th frame (idx 15) moves map 20 pixels down
+    bf.actors["opponent"].frame_index.return_value = 15
+    assert bf.thunderfall_shake_y() == 20
+
+    # 17th frame (idx 16) moves 10 pixels up (-10)
+    bf.actors["opponent"].frame_index.return_value = 16
+    assert bf.thunderfall_shake_y() == -10
+
+    # 18th frame (idx 17) moves 10 pixels down (+10)
+    bf.actors["opponent"].frame_index.return_value = 17
+    assert bf.thunderfall_shake_y() == 10
+
+    # 19th frame (idx 18) stays same as 18th (+10)
+    bf.actors["opponent"].frame_index.return_value = 18
+    assert bf.thunderfall_shake_y() == 10
+
+    # 20th frame (idx 19) returns to original position (0)
+    bf.actors["opponent"].frame_index.return_value = 19
+    assert bf.thunderfall_shake_y() == 0
+
+    # Ground and crop defined for HUD and effect centering
+    assert s3["opponent"]["shadow"]["ground"] == [0.851, 0.722]
+    assert s3["opponent"]["shadow"]["crop"] == [0.6, 0.08, 0.39, 0.68]
+
+def test_card_draw_timing_and_defeat_text():
+    from src.core.app import App
+    a = App(start_stage=1)
+    a.action("start")
+    a.action("battle")
+    b = a.campaign.battle
+    # Empty hand
+    b.deck.hand = []
+    a.draw_battle((0, 0))
+    # Now simulate loss
+    b.player.hp = 0
+    b.status = "lost"
+    # When HP is depleted, visible hand is empty
+    assert a.visible_hand() == []
+
+def test_enemy_turn_card_draw_waits_for_animation():
+    from src.core.app import App
+    a = App(start_stage=1)
+    a.action("start")
+    a.action("battle")
+    b = a.campaign.battle
+    # Player ends turn
+    a.action("end")
+    assert a.enemy_turn_in_progress is True
+    # While enemy turn is in progress, visible_hand is empty (player does not see cards early)
+    assert a.visible_hand() == []
+    # Advance time through the animation
+    for _ in range(30):
+        a.update(0.1)
+    # Once enemy animation is over, enemy_turn_in_progress becomes False and cards appear
+    assert a.enemy_turn_in_progress is False
+    assert len(a.visible_hand()) == 3
+
+
+def test_stage_three_debug_menu_disabled_by_default():
+    from src.core.app import App
+    a = App(start_stage=3)
+    try:
+        a.action("start")
+        a.action("battle")
+        a.update(.3)
+        assert not a.campaign.stage.get("debug", False)
+        assert not a.battlefield.background.options.get("debug_controls", False)
+        a.draw()
+        assert "preview_toggle" not in a.buttons
+        a.event(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_F6))
+        assert a.preview is None
+        a.event(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_F1))
+        assert not a.battlefield.camera.debug
+    finally:
+        pygame.quit()

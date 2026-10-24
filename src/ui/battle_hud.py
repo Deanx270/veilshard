@@ -157,16 +157,25 @@ class BattleHUD:
         ui.text(s,b.intent.label+("  !" if b.plan.enraged else ""),(x,y+74),17,(244,187,141))
         hover=self.end.collidepoint(mouse) and enabled
         circle=pygame.Surface((174,174),pygame.SRCALPHA)
-        pygame.draw.circle(circle,(18,22,33,185),(87,87),70)
-        color=GOLD if enabled else (111,113,127)
-        if hover: pygame.draw.circle(circle,(225,188,123,35),(87,87),78)
+        if hover:
+            pygame.draw.circle(circle,(240,196,120,40),(87,87),78)
+            pygame.draw.circle(circle,(240,196,120,70),(87,87),73)
+            bg_color=(36,42,58,235)
+        else:
+            bg_color=(18,22,33,200)
+        pygame.draw.circle(circle,bg_color,(87,87),70)
+        if hover:
+            pygame.draw.circle(circle,(225,185,115,45),(87,87),65)
+        color=(255,232,175) if hover else (GOLD if enabled else (111,113,127))
         radius=67 if pressed else 70
-        pygame.draw.circle(circle,color,(87,87),radius,2)
-        pygame.draw.circle(circle,(*color,140),(87,87),radius-6,1)
+        ring_w=3 if hover else 2
+        pygame.draw.circle(circle,color,(87,87),radius,ring_w)
+        pygame.draw.circle(circle,(*color[:3],160 if hover else 140),(87,87),radius-6,1)
         for dx,dy in ((0,-80),(80,0),(0,80),(-80,0)):
             px,py=87+dx,87+dy
             pygame.draw.polygon(circle,color,[(px,py-6),(px+5,py),(px,py+6),(px-5,py)])
         s.blit(circle,(self.end.center[0]-87,self.end.center[1]-87))
-        ui.text(s,"End",(1450,772),26,color,True)
-        ui.text(s,"Turn",(1450,804),26,color,True)
+        text_color=(255,245,225) if hover else color
+        ui.text(s,"End",(1450,772),26,text_color,True)
+        ui.text(s,"Turn",(1450,804),26,text_color,True)
         ui.text(s,"ESC · Pause",(1450,885),14,MUTED,True)

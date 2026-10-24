@@ -1,5 +1,6 @@
 """Small cached ground projections of frame alpha; no runtime pixel analysis."""
 import math
+from statistics import median
 import pygame
 
 
@@ -10,6 +11,21 @@ class FrameShadows:
     def __init__(self, frames, config):
         self.config = config
         self.cache = {}
+        frames = list(frames)
+        self.ground_baselines = {}
+        if config.get("stable_ground", False):
+            samples = {}
+            for frame in {id(f): f for f in frames}.values():
+                w,h = frame.get_size()
+                crop = config.get("crop", [0,0,1,1])
+                rect = pygame.Rect(round(crop[0]*w),round(crop[1]*h),max(1,round(crop[2]*w)),max(1,round(crop[3]*h))).clip(frame.get_rect())
+                if not rect.width or not rect.height: continue
+                start = config.get("foot_band",.80)
+                band = pygame.Rect(rect.x,rect.y+round(rect.height*start),rect.width,max(1,round(rect.height*(1-start)))).clip(rect)
+                feet = frame.subsurface(band).get_bounding_rect(min_alpha=128)
+                if feet.width:
+                    samples.setdefault(frame.get_size(),[]).append(band.y+feet.bottom)
+            self.ground_baselines = {size: round(median(values)) for size,values in samples.items()}
         cfg_key = (
             config.get("mode"),
             tuple(config.get("ground", [.5, 1])),
@@ -18,12 +34,13 @@ class FrameShadows:
             config.get("angle", 0),
             config.get("foot_locked", False),
             config.get("foot_band", .80),
+            config.get("local_feet", False),
             tuple(config.get("crop", [0, 0, 1, 1])),
         )
         for frame in frames:
             fid = id(frame)
             if fid not in self.cache:
-                ck = (fid, cfg_key)
+                ck = (fid, cfg_key, self.ground_baselines.get(frame.get_size()))
                 if ck in _SHARED_SHADOW_CACHE:
                     self.cache[fid] = _SHARED_SHADOW_CACHE[ck]
                 else:
@@ -91,7 +108,7 @@ class FrameShadows:
         band = pygame.Rect(rect.x, rect.y+round(rect.height*band_start), rect.width,
                            max(1, round(rect.height*(1.0-band_start)))).clip(rect)
         feet = frame.subsurface(band).get_bounding_rect(min_alpha=128).move(band.topleft)
-        ground_y = feet.bottom if feet.width else rect.bottom
+        ground_y = self.ground_baselines.get(frame.get_size(), feet.bottom if feet.width else rect.bottom)
         ground_x = feet.centerx if feet.width else rect.centerx
         # Project away from the feet using shear, rather than rotating the entire
         # cutout (which lifts one foot off the contact line).
@@ -102,6 +119,8 @@ class FrameShadows:
         vertical = math.cos(angle)
         if abs(vertical)<.15: vertical = .15 if vertical>=0 else -.15
         width = self.config.get("width",1)
+        if self.config.get("local_feet", False):
+            return self.build_local_feet(mask, rect, ground_y, depth, angle, vertical)
         strips = []
         for row in range(96):
             source_y = rect.y+(row+.5)*rect.height/96
@@ -124,6 +143,35 @@ class FrameShadows:
         small = pygame.transform.smoothscale(shadow,(max(1,bounds.width//2),max(1,bounds.height//2)))
         shadow = pygame.transform.smoothscale(small,bounds.size)
         return shadow, bounds.topleft
+
+    def build_local_feet(self, mask, rect, ground_y, depth, angle, vertical):
+        """Continuous row-resampled projection; one source height per output row.
+
+        Column-dependent ground heights fold a silhouette into streaks. Keep a
+        single affine ground plane, then soften only the cached result.
+        """
+        source_height = max(1, min(rect.height, round(ground_y-rect.y)))
+        mask_height = max(1, min(96, round(source_height/rect.height*96)))
+        height = max(2, round(source_height*depth*abs(vertical)))
+        projected = pygame.transform.smoothscale(mask.subsurface((0,0,96,mask_height)),(96,height))
+        rows = []
+        for y in range(height):
+            distance = source_height*(1-(y+.5)/height)
+            blend = min(1,distance/max(1,source_height*.3))
+            spread = 1+(self.config.get("width",1)-1)*blend
+            width = max(1,round(rect.width*spread))
+            x = round(rect.centerx+(rect.x-rect.centerx)*spread+distance*depth*math.sin(angle))
+            target_y = round(ground_y)-height+y if vertical>0 else round(ground_y)+height-1-y
+            rows.append((x,target_y,width))
+        left=min(x for x,_,_ in rows); top=min(y for _,y,_ in rows)
+        right=max(x+w for x,_,w in rows)
+        shadow=pygame.Surface((right-left+4,height+4),pygame.SRCALPHA)
+        for y,(x,target_y,width) in enumerate(rows):
+            row=pygame.transform.smoothscale(projected.subsurface((0,y,96,1)),(width,1))
+            shadow.blit(row,(x-left+2,target_y-top+2))
+        small=pygame.transform.smoothscale(shadow,(max(1,shadow.get_width()//2),max(1,shadow.get_height()//2)))
+        shadow=pygame.transform.smoothscale(small,shadow.get_size())
+        return shadow,(left-2,top-2)
 
     def draw(self, surface, frame, top_left):
         if not self.config.get("enabled", True): return

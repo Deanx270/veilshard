@@ -62,6 +62,8 @@ class Battle:
         self.deck.discard.append(self.deck.hand.pop(index))
         if card.category == "attack":
             effects = [Effect("enemy", "damage", self.enemy.damage(card.amount))]
+            if getattr(self.plan, "excess_block_active", False):
+                self.intent = self.plan.refresh_intent(self.enemy.block)
         elif card.category == "heal":
             effects = [Effect("player", "heal", self.player.heal(card.amount))]
         else:
@@ -90,10 +92,12 @@ class Battle:
         if getattr(action, "defend_amount", 0) > 0 and action.kind != "defend":
             self.enemy.block += action.defend_amount
             effects.append(Effect("enemy", "block", action.defend_amount))
+        if hasattr(self.plan, "on_action_executed"):
+            self.plan.on_action_executed(action)
         self.player.block = 0
         if self.player.hp == 0:
             self.status = "lost"
         else:
-            self.intent = self.plan.next(self.enemy.hp, self.enemy.max_hp)
+            self.intent = self.plan.next(self.enemy.hp, self.enemy.max_hp, self.enemy.block)
             self._start_turn()
         return effects

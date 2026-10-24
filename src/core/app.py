@@ -15,17 +15,23 @@ from src.ui.battle_hud import BattleHUD
 from src.rendering.animation_preview import AnimationPreview
 
 class App:
-    def __init__(self):
+    def __init__(self, start_stage: int = 1):
         pygame.init()
         self.window=pygame.display.set_mode((1280,720),pygame.RESIZABLE)
         self.canvas=pygame.Surface(SIZE)
         self.campaign=Campaign()
+        if start_stage > 1:
+            self.campaign.start()
+            self.campaign.cleared_stages = set(range(start_stage - 1))
+            self.campaign.index = min(len(self.campaign.stages) - 1, max(0, start_stage - 1))
+            self.campaign.enter_battle()
         pygame.display.set_caption(self.campaign.story["title"])
         self.assets=Assets()
         self.ui=UI()
         self.hand=CardHand(self.ui)
         self.hud=BattleHUD(self.ui)
         self.end_pressed=0.0
+        self.enemy_turn_in_progress=False
         self.timeline=ActionTimeline()
         self.pending_card=None
         self.preview=None
@@ -39,7 +45,7 @@ class App:
         self.time=0.0
         self.lock=0.0
         self.fade=0.0
-        self.last_scene="menu"
+        self.last_scene=self.campaign.scene
         self.loaded_stage=None
         self.buttons={}
         self.draw_loading(0.01, "Initializing...")
@@ -132,9 +138,11 @@ class App:
                 if s_id == stage_id and target in target_stage:
                     target_stage[target]["position"] = list(prev.spec["position"])
                     target_stage[target]["size"] = list(prev.spec["size"])
+                    target_stage[target]["anchor"] = list(prev.spec.get("anchor", target_stage[target].get("anchor", [0.5, 1.0])))
                     target_stage[target]["scale"] = prev.spec.get("scale", 1.0)
                     target_stage[target]["shadow"] = copy.deepcopy(prev.spec["shadow"])
                     self.campaign.stage[target]["position"] = list(prev.spec["position"])
+                    self.campaign.stage[target]["anchor"] = list(prev.spec.get("anchor", self.campaign.stage[target].get("anchor", [0.5, 1.0])))
                     self.campaign.stage[target]["size"] = list(prev.spec["size"])
                     self.campaign.stage[target]["scale"] = prev.spec.get("scale", 1.0)
                     self.campaign.stage[target]["shadow"] = copy.deepcopy(prev.spec["shadow"])
@@ -145,12 +153,15 @@ class App:
                             actual_actor.apply_preview(prev)
                         else:
                             actual_actor.spec["position"] = list(prev.spec["position"])
+                            actual_actor.spec["anchor"] = list(prev.spec.get("anchor", actual_actor.spec.get("anchor", [0.5, 1.0])))
                             actual_actor.spec["size"] = list(prev.spec["size"])
                             actual_actor.spec["scale"] = prev.spec.get("scale", 1.0)
                             actual_actor.spec["shadow"] = copy.deepcopy(prev.spec["shadow"])
-                            if hasattr(actual_actor, "clips") and prev.spec["shadow"].get("mode") in ("frame", "contact"):
+                            if hasattr(actual_actor, "clips") and prev.spec["shadow"].get("enabled", True) and prev.spec["shadow"].get("mode") in ("frame", "contact"):
                                 from src.rendering.frame_shadow import FrameShadows
                                 actual_actor.frame_shadows = FrameShadows([frame for frames, _, _ in actual_actor.clips.values() for frame in frames], actual_actor.spec["shadow"])
+                            elif not prev.spec["shadow"].get("enabled", True):
+                                actual_actor.frame_shadows = None
                     saved_targets.append(target)
 
             with open(stages_path, "w", encoding="utf-8") as f:
@@ -247,11 +258,19 @@ class App:
                 self.battlefield.camera.reset()
             self.battlefield.reactions.clear()
             self.battlefield.motion=None
-        elif name=="next": c.advance()
-        elif name=="retry": c.retry()
+        elif name=="next":
+            self.enemy_turn_in_progress=False
+            c.advance()
+        elif name=="retry":
+            self.enemy_turn_in_progress=False
+            c.retry()
+        elif name=="retry_prev":
+            self.enemy_turn_in_progress=False
+            c.retry_previous()
         elif name=="menu":
             c.scene="menu"; self.paused=False
             self.timeline.cancel(); self.pending_card=None; self.lock=0
+            self.enemy_turn_in_progress=False
             for actor in self.battlefield.actors.values():
                 actor.state="idle"; actor.elapsed=0.0
         elif name=="quit": self.running=False
@@ -259,6 +278,7 @@ class App:
         elif name=="pause": self.paused=True
         elif name=="end" and c.scene=="battle" and c.battle.status=="active" and not self.lock and not self.paused and not self.preview:
             self.end_pressed=0.16
+            self.enemy_turn_in_progress=True
             kind=c.battle.intent.kind
             self.begin_action(kind,"opponent",c.battle.end_turn)
         self.change_feedback()
@@ -311,12 +331,23 @@ class App:
                 actor.on_state_change = lambda new_state: self.effects.add(block_after, self.campaign.stage, "defend", source)
             elif block_after:
                 self.effects.add(block_after, self.campaign.stage, "defend", source)
-        clip = "heavy" if kind in ("heavy", "special") and "heavy" in actor.clips else "attack" if kind in ("heavy", "special") else "defend" if kind == "block" else kind
+        if kind == "special" and "special" in actor.clips:
+            clip = "special"
+        elif kind == "heavy" and "heavy" in actor.clips:
+            clip = "heavy"
+        elif kind in ("heavy", "special"):
+            clip = "heavy" if "heavy" in actor.clips else "attack"
+        elif kind == "block":
+            clip = "defend"
+        else:
+            clip = kind
         if self.timeline.start(kind, source, impact, actor.action_timing(clip)):
             actor.trigger(clip)
             self.lock=max(self.timeline.remaining, self.actors_busy_time())
 
     def visible_hand(self):
+        if getattr(self, "enemy_turn_in_progress", False):
+            return []
         cards=list(self.campaign.battle.deck.hand)
         if self.pending_card is not None: cards.pop(self.pending_card)
         return cards
@@ -330,6 +361,11 @@ class App:
             self.battlefield.update(dt)
             self.timeline.update(dt)
             self.lock=max(self.timeline.remaining, self.actors_busy_time() if self.campaign.scene=="battle" else 0.0)
+            if getattr(self, "enemy_turn_in_progress", False):
+                opp = self.battlefield.actors.get("opponent")
+                enemy_busy = getattr(opp, "busy_remaining", 0.0) if opp else 0.0
+                if not self.timeline.active and enemy_busy == 0:
+                    self.enemy_turn_in_progress = False
             self.battlefield.motion=self.timeline
             if self.campaign.scene=="battle": self.hud.update(dt,self.campaign.battle)
             self.end_pressed=max(0,self.end_pressed-dt)
@@ -414,15 +450,16 @@ class App:
         res = c.last_battle_result
         if res:
             banner_rect = pygame.Rect(200, 130, 1200, 44)
+            half_note = "   (Half Reward)" if res.get("half_reward") else ""
             if res.get("won"):
                 bg_color = (22, 52, 36)
                 border_color = (65, 150, 95)
-                msg = f"STAGE CLEARED: {res['stage_name']}   |   Claimed +{res['earned']} Veil Shards"
+                msg = f"STAGE CLEARED: {res['stage_name']}   |   Claimed +{res['earned']} Veil Shards{half_note}"
                 text_color = (165, 245, 190)
             else:
                 bg_color = (52, 25, 30)
                 border_color = (150, 65, 75)
-                msg = f"DEFEATED: Dealt {res['damage_dealt']}/{res['enemy_max_hp']} damage to {res['enemy_name']}   |   Gained +{res['earned']} Veil Shards"
+                msg = f"DEFEATED: Dealt {res['damage_dealt']}/{res['enemy_max_hp']} damage to {res['enemy_name']}   |   Gained +{res['earned']} Veil Shards{half_note}"
                 text_color = (245, 175, 180)
             ui.panel(s, banner_rect, bg_color, border_color, 10)
             ui.text(s, msg, banner_rect.center, 18, text_color, True)
@@ -503,6 +540,8 @@ class App:
             cont_label = f"Retry Stage {c.index + 1}"
             cont_action = "retry"
 
+        if c.index > 0:
+            self.button("retry_prev", f"Retry Stage {c.index}", (380, 761, 210, 42), mouse)
         self.button(cont_action, cont_label, (630, 755, 340, 54), mouse, accent=c.stage["accent"])
         self.button("menu", "Main Menu", (1010, 761, 180, 42), mouse)
 
@@ -514,7 +553,8 @@ class App:
         self.buttons["pause"]=self.hud.pause
         if enabled: self.buttons["end"]=self.hud.end
         self.hand.sync(self.visible_hand())
-        self.hand.draw(self.canvas,b.energy)
+        if not self.preview:
+            self.hand.draw(self.canvas,b.energy)
         if self.battlefield.parallax and self.battlefield.camera.debug:
             from src.ui.battle_hud import glass
             camera=self.battlefield.camera
@@ -527,7 +567,7 @@ class App:
         if self.campaign.stage.get("debug", False) or self.preview:
             self.button("preview_toggle", "Close preview (F6)" if self.preview else "Test animation (F6)", (965, 16, 215, 30) if self.preview else (675, 22, 250, 40), mouse, not self.lock)
         if self.preview_error and (self.campaign.stage.get("debug", False) or self.preview): self.ui.text(self.canvas, self.preview_error[:110], (530, 70), 17)
-        if not b.deck.hand:
+        if not self.preview and not b.deck.hand and b.status == "active" and b.player.hp > 0 and not getattr(self, "enemy_turn_in_progress", False):
             self.ui.text(self.canvas,"End your turn to draw three cards.",(800,804),21,INK,True)
 
     def run(self,frames=None):

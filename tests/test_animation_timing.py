@@ -96,5 +96,33 @@ def test_long_frame_and_strength(app):
     assert app.battlefield.camera.strength>1
     assert not app.effects.bursts
     from src.combat.battle import Effect
-    app.effects.add([Effect("enemy","damage",10)], app.campaign.stages[2], "heavy", "player")
+    app.effects.add([Effect("enemy","damage",10)], app.campaign.stages[3], "heavy", "player")
     assert len(app.effects.bursts[-1]["particles"])==14
+
+
+def test_stage_three_enemy_charge_block_timing():
+    a = App(start_stage=3)
+    try:
+        b = a.campaign.battle
+        a.action("end")
+        while a.enemy_turn_in_progress or a.lock:
+            a.update(0.05)
+
+        assert b.intent.kind == "defend"
+        assert b.enemy.block == 0
+
+        a.action("end")
+        assert a.enemy_turn_in_progress is True
+        assert a.timeline.active is True
+        assert a.timeline.impact == pytest.approx(1.0)
+
+        a.update(0.90)
+        assert b.enemy.block == 0
+        assert len(a.effects.bursts) == 0
+
+        a.update(0.15)
+        assert b.enemy.block == 12
+        assert len(a.effects.bursts) > 0
+        assert a.effects.bursts[-1]["kind"] == "block"
+    finally:
+        pygame.quit()

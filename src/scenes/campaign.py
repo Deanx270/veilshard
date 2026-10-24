@@ -56,6 +56,7 @@ class Campaign:
         self.index = 0
         self.battle: Battle | None = None
         self.shards = 0
+        self.cleared_stages = set()
         self.upgrades = {k: 0 for k in SHOP_CATALOG}
         self.last_battle_result: dict | None = None
 
@@ -67,6 +68,7 @@ class Campaign:
         self.index = 0
         self.battle = None
         self.shards = 0
+        self.cleared_stages = set()
         self.upgrades = {k: 0 for k in SHOP_CATALOG}
         self.last_battle_result = None
         self.scene = "intro"
@@ -103,9 +105,13 @@ class Campaign:
         base_win = 60 + self.index * 35
         max_loss = 25 + self.index * 15
         if won:
-            return base_win
-        ratio = min(1.0, max(0.0, damage_dealt / max(1, enemy_max_hp)))
-        return round(ratio * max_loss)
+            reward = base_win
+        else:
+            ratio = min(1.0, max(0.0, damage_dealt / max(1, enemy_max_hp)))
+            reward = round(ratio * max_loss)
+        if self.index in self.cleared_stages:
+            reward = max(1, reward // 2) if reward > 0 else 0
+        return reward
 
     def resolve(self):
         if self.scene == "battle" and self.battle and self.battle.status in ("won", "lost"):
@@ -114,6 +120,9 @@ class Campaign:
             won = (self.battle.status == "won")
             earned = self.calculate_reward(won, damage_dealt, enemy_max_hp)
             self.shards += earned
+            is_repeat = self.index in self.cleared_stages
+            if won:
+                self.cleared_stages.add(self.index)
             self.last_battle_result = {
                 "won": won,
                 "earned": earned,
@@ -121,6 +130,7 @@ class Campaign:
                 "enemy_max_hp": enemy_max_hp,
                 "enemy_name": self.stage["enemy"]["name"],
                 "stage_name": self.stage["name"],
+                "half_reward": is_repeat,
             }
             if won:
                 self.scene = "victory" if self.index == len(self.stages) - 1 else "shop"
@@ -134,6 +144,11 @@ class Campaign:
 
     def retry(self):
         if self.scene in ("over", "shop"):
+            self.scene = "intro"
+
+    def retry_previous(self):
+        if self.scene in ("over", "shop") and self.index > 0:
+            self.index -= 1
             self.scene = "intro"
 
     def item_cost(self, item_id: str) -> int:

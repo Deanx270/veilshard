@@ -34,9 +34,9 @@ class Camera:
         zoom_mult = 1.6 if self.strength > 1.5 else 1.0
         return self.base_zoom + self.impact_zoom * self.strength * zoom_mult * math.sin(math.pi * decay)
 
-    def present(self, world, destination):
+    def present(self, world, destination, shake_y=0):
         zoom = self.zoom
-        if self.remaining == 0 and zoom == 1:
+        if self.remaining == 0 and zoom == 1 and shake_y == 0:
             destination.blit(world, (0, 0))
             return
         # Quantization limits buffer reallocations; source assets remain cached.
@@ -47,7 +47,7 @@ class Camera:
         pygame.transform.smoothscale(world, size, self.buffer)
         shake = self.remaining / 0.28 * 4 * self.strength
         x = (1-zoom)*self.focus[0] + math.sin(self.clock*95)*shake
-        y = (1-zoom)*self.focus[1] + math.cos(self.clock*81)*shake
+        y = (1-zoom)*self.focus[1] + math.cos(self.clock*81)*shake + shake_y
         # Keep the frame covered even with a focus near an edge.
         x = max(destination.get_width()-size[0], min(0, round(x)))
         y = max(destination.get_height()-size[1], min(0, round(y)))
@@ -97,6 +97,18 @@ class Battlefield:
         for actor in self.actors.values():
             actor.update(dt)
 
+    def thunderfall_shake_y(self) -> int:
+        opponent = self.actors.get("opponent")
+        if opponent and getattr(opponent, "state", None) == "heavy":
+            idx = opponent.frame_index()
+            if idx == 15:
+                return 20
+            elif idx == 16:
+                return -10
+            elif idx in (17, 18):
+                return 10
+        return 0
+
     def draw(self, destination, time, effects, font):
         self.background.draw(self.world, time)
         ground_offset=self.background.actor_offset if self.parallax else (0,0)
@@ -130,4 +142,4 @@ class Battlefield:
             effects.draw(self.effect_layer,font)
             self.world.blit(self.effect_layer,tuple(round(v) for v in ground_offset))
         else: effects.draw(self.world, font)
-        self.camera.present(self.world, destination)
+        self.camera.present(self.world, destination, shake_y=self.thunderfall_shake_y())

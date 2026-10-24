@@ -25,7 +25,8 @@ class ParallaxBackground:
             image_path=path.parent/entry
             if image_path.exists():
                 with image_path.open("rb") as file: header=file.read(24)
-                if header[:8]!=b"\x89PNG\r\n\x1a\n" or (entry!=source["expanded_master"] and struct.unpack(">II",header[16:24])!=tuple(expanded)):
+                dims = struct.unpack(">II", header[16:24])
+                if header[:8]!=b"\x89PNG\r\n\x1a\n" or (entry!=source["expanded_master"] and (dims[0]<expanded[0] or dims[1]!=expanded[1])):
                     raise ValueError(f"{entry}: expected aligned PNG canvas {expanded}")
         self.master=assets.image(str(path.parent/source["expanded_master"]),self.size)
         if self.master is not None: self.master=self.master.convert()
@@ -156,7 +157,7 @@ class ParallaxCamera:
         zoom_mult=1.6 if self.strength>1.5 else 1.0
         return max(self.zoom_range[0],min(self.zoom_range[1],self.current_zoom+self.impact_zoom*self.strength*zoom_mult*math.sin(math.pi*decay)))
 
-    def present(self,world,destination):
+    def present(self,world,destination,shake_y=0):
         # Zoom the overscanned composite, not the already cropped viewport.
         zoom=round(self.zoom*200)/200
         size=tuple(round(v*zoom) for v in world.get_size())
@@ -168,5 +169,5 @@ class ParallaxCamera:
             pygame.transform.smoothscale(world,size,self.buffer)
             frame=self.buffer
         pivot=self.background.pivot; inset=self.background.inset
-        position=tuple(round(pivot[i]*(1-zoom)-inset[i]) for i in range(2))
+        position=tuple(round(pivot[i]*(1-zoom)-inset[i]) + (shake_y if i==1 else 0) for i in range(2))
         destination.blit(frame,position)

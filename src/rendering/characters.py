@@ -82,10 +82,15 @@ class CharacterSprite:
             anims = spec.get("animations", {})
             total_frames = max(1, sum(len(c.get("frames", [])) for c in anims.values()))
             loaded_count = 0
+            base_source = spec.get("source_size", [1920, 1080])
+            sx = self.size[0] / base_source[0]
+            sy = self.size[1] / base_source[1]
             for name, clip in anims.items():
                 frames = []
+                clip_source = clip.get("source_size", base_source)
+                target_size = (max(1, round(clip_source[0] * sx)), max(1, round(clip_source[1] * sy)))
                 for path in clip.get("frames", []):
-                    frame = assets.image(path, self.size, preserve_aspect=True)
+                    frame = assets.image(path, target_size, preserve_aspect=True)
                     if frame is not None:
                         frames.append(frame)
                     loaded_count += 1
@@ -116,9 +121,8 @@ class CharacterSprite:
             self.clip_offsets = {}
             for name in self.clips:
                 config = spec.get("animations", {}).get(name, {})
-                source_size = config.get("source_size", self.size)
                 offset = config.get("canvas_offset", [0, 0])
-                self.clip_offsets[name] = tuple(round(offset[i] * self.size[i] / source_size[i]) for i in range(2))
+                self.clip_offsets[name] = tuple(round(offset[i] * self.size[i] / base_source[i]) for i in range(2))
             self.flashes = {}
             if progress_cb:
                 progress_cb(p_min + p_span * 0.86, f"Processing hit reactions for {actor_name}...")
@@ -163,6 +167,8 @@ class CharacterSprite:
         size_changed = new_size != tuple(self.size) or prev.spec.get("scale", 1.0) != self.spec.get("scale", 1.0)
         self.spec["position"] = list(prev.spec["position"])
         self.spec["size"] = list(prev.spec["size"])
+        if "anchor" in prev.spec:
+            self.spec["anchor"] = list(prev.spec["anchor"])
         self.spec["scale"] = prev.spec.get("scale", 1.0)
         self.spec["shadow"] = copy.deepcopy(prev.spec["shadow"])
         if size_changed and getattr(prev, "frames", None):
@@ -196,12 +202,12 @@ class CharacterSprite:
                 self.clips = self._apply_lighting(raw_clips, lighting)
             else:
                 self.clips = raw_clips
+            base_source = self.spec.get("source_size", [1920, 1080])
             self.clip_offsets = {}
             for name in self.clips:
                 config = self.spec.get("animations", {}).get(name, {})
-                source_size = config.get("source_size", self.size)
                 offset = config.get("canvas_offset", [0, 0])
-                self.clip_offsets[name] = tuple(round(offset[i] * self.size[i] / source_size[i]) for i in range(2))
+                self.clip_offsets[name] = tuple(round(offset[i] * self.size[i] / base_source[i]) for i in range(2))
             self.flashes = {}
             for name, (frames, fps, loop) in self.clips.items():
                 tinted = []
@@ -217,32 +223,32 @@ class CharacterSprite:
         ambient = config.get("ambient", [255, 255, 255])
         highlight = config.get("highlight", [0, 0, 0])
         bounce = config.get("bounce", [0, 0, 0])
-        w, h = self.size
-        ambient_surf = None
-        if list(ambient) != [255, 255, 255]:
-            ambient_surf = pygame.Surface((w, h))
-            ambient_surf.fill(ambient)
-        grad_surf = None
-        if any(highlight) or any(bounce):
-            small = pygame.Surface((1, 64), pygame.SRCALPHA)
-            for y in range(64):
-                sun_f = max(0.0, 1.0 - y / 40.0) ** 1.2
-                bounce_f = max(0.0, (y - 30.0) / 34.0) ** 1.2
-                r = int(min(255, highlight[0] * sun_f + bounce[0] * bounce_f))
-                g = int(min(255, highlight[1] * sun_f + bounce[1] * bounce_f))
-                b = int(min(255, highlight[2] * sun_f + bounce[2] * bounce_f))
-                small.set_at((0, y), (r, g, b, 255))
-            grad_surf = pygame.transform.smoothscale(small, (w, h))
-
+        amb_surfs = {}
+        grad_surfs = {}
         new_clips = {}
         for name, (frames, fps, loop) in clips.items():
             lit_frames = []
             for frame in frames:
+                fsize = frame.get_size()
                 lit = frame.copy()
-                if ambient_surf is not None:
-                    lit.blit(ambient_surf, (0, 0), special_flags=pygame.BLEND_RGB_MULT)
-                if grad_surf is not None:
-                    lit.blit(grad_surf, (0, 0), special_flags=pygame.BLEND_RGB_ADD)
+                if list(ambient) != [255, 255, 255]:
+                    if fsize not in amb_surfs:
+                        amb = pygame.Surface(fsize)
+                        amb.fill(ambient)
+                        amb_surfs[fsize] = amb
+                    lit.blit(amb_surfs[fsize], (0, 0), special_flags=pygame.BLEND_RGB_MULT)
+                if any(highlight) or any(bounce):
+                    if fsize not in grad_surfs:
+                        small = pygame.Surface((1, 64), pygame.SRCALPHA)
+                        for y in range(64):
+                            sun_f = max(0.0, 1.0 - y / 40.0) ** 1.2
+                            bounce_f = max(0.0, (y - 30.0) / 34.0) ** 1.2
+                            r = int(min(255, highlight[0] * sun_f + bounce[0] * bounce_f))
+                            g = int(min(255, highlight[1] * sun_f + bounce[1] * bounce_f))
+                            b = int(min(255, highlight[2] * sun_f + bounce[2] * bounce_f))
+                            small.set_at((0, y), (r, g, b, 255))
+                        grad_surfs[fsize] = pygame.transform.smoothscale(small, fsize)
+                    lit.blit(grad_surfs[fsize], (0, 0), special_flags=pygame.BLEND_RGB_ADD)
                 lit_frames.append(lit)
             new_clips[name] = (lit_frames, fps, loop)
         return new_clips

@@ -90,7 +90,7 @@ def test_debug_controls_pause_reset_and_stage_scope(app):
     key(pygame.K_F4); assert camera.remaining>0
     app.paused=True; before=camera.remaining; app.update(1); assert camera.remaining==before
     app.paused=False; key(pygame.K_HOME); assert camera.target==[0,0] and camera.zoom==1
-    for index in range(2,5):
+    for index in range(3,5):
         app.campaign.index=index;app.load_stage()
         assert not app.battlefield.parallax
 
@@ -126,3 +126,27 @@ def test_zoomed_opaque_world_replaces_previous_frame(app):
     pivot=app.background.pivot;inset=app.background.inset
     offset=tuple(round(pivot[i]*(1-.95)-inset[i]) for i in range(2))
     assert target.get_at((800,450))==fresh.get_at((800-offset[0],450-offset[1]))
+
+
+def test_stage_three_manifest_layer_order_and_heavy_zoom():
+    import json
+    path = resource("assets/backgrounds/stage_03/manifest.json")
+    with open(path, "r", encoding="utf-8") as f:
+        manifest = json.load(f)
+    expected_order = [
+        "sky.png",
+        "storm_clouds.png",
+        "stormspire.png",
+        "atmospheric_fog.png",
+        "far_mountains.png",
+        "floating_islands.png",
+        "ground.png",
+        "midground_ruins.png",
+        "foreground.png"
+    ]
+    assert manifest["render_order"] == expected_order
+    order = manifest["render_order"]
+    assert order.index("storm_clouds.png") < order.index("stormspire.png")
+    assert order.index("stormspire.png") < order.index("atmospheric_fog.png")
+    assert order.index("atmospheric_fog.png") < order.index("far_mountains.png")
+    assert manifest["parallax"]["zoom"]["range"][1] >= 1.15
