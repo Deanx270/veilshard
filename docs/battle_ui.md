@@ -13,3 +13,13 @@ The entire 1600×900 world composite renders behind the HUD. No footer, viewport
 The gameplay layer is unchanged. Card and camera animations freeze while paused. The existing letterboxed mouse mapping feeds all HUD/card input. All UI coordinates use logical pixels rather than monitor coordinates. Future hand-size changes can use 1–6 cards without new layout coordinates, although gameplay still draws three.
 
 Validation: pytest covers counts 0–6, inverse rotation and transparent corners, duplicate occurrence reflow, overlapping draw/click order, hover, affordability, empty hands, and resized clicks. A rendered background pixel below the former footer confirms the world is visible there. Existing campaign and combat tests still pass. Three-card, hovered, and six-card screenshots were inspected. Final Blender assets remain pending; this is an interface redesign using current procedural scenery.
+
+## Shard Resonance
+
+The post-battle `shop` scene now presents Shard Resonance through `src/ui/shard_resonance.py`. It samples three distinct upgrades on entry, prioritizing those not at maximum level, and keeps them fixed until a new battle result. Campaign.buy, costs, caps, shard rewards and upgrade effects are unchanged. No stage locks exist in the current catalog; unavailable purchases show the missing shard amount, while capped upgrades show Fully attuned. Aether Conduit is available at level zero, not locked.
+
+Cards select on click, ease upward on hover/selection, show actual current-to-next values and diamond progression markers. Enhance activates only on a matching mouse release; cancelled presses and repeated releases do not buy. A short purchase cooldown, glow pulse, status message and interpolated shard balance provide feedback. Numeric upgrade previews immediately use authoritative state. Proceed follows victory; Retry follows defeat, with previous-stage retry only after defeat. F6 battle preview is independent. Icons and the cached background sigil are procedural, with no additional runtime dependencies.
+
+## Moonlit ice identity
+
+Attack/heavy internal IDs and all combat behavior remain unchanged; display names are Frost Bolt and Glacial Bolt. Shared cached geometric icons in resonance_icons.py connect offensive card artwork with Frost Focus and Moonshard Surge. Upgrade keys, costs, caps and scaling are unchanged. The remaining upgrades are Vital Infusion, Crystal Aegis, Lunar Renewal and Resonance Conduit. Existing animations/timing/effects are untouched. Battle card title sizing accommodates longer upgraded names within the original card geometry.

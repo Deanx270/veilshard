@@ -12,6 +12,7 @@ from src.ui.widgets import UI, INK, MUTED
 from src.ui.card_hand import CardHand
 from src.rendering.action_timeline import ActionTimeline
 from src.ui.battle_hud import BattleHUD
+from src.ui.shard_resonance import ShardResonance
 from src.rendering.animation_preview import AnimationPreview
 
 class App:
@@ -30,6 +31,7 @@ class App:
         self.ui=UI()
         self.hand=CardHand(self.ui)
         self.hud=BattleHUD(self.ui)
+        self.resonance=ShardResonance()
         self.end_pressed=0.0
         self.enemy_turn_in_progress=False
         self.timeline=ActionTimeline()
@@ -237,7 +239,8 @@ class App:
             self.preview_action(name)
             return
         if name.startswith("buy_"):
-            self.campaign.buy(name.removeprefix("buy_"))
+            if self.campaign.scene == "shop":
+                self.resonance.buy(self.campaign,name.removeprefix("buy_"))
             return
         if name == "menu": self.close_preview()
         c=self.campaign
@@ -285,6 +288,9 @@ class App:
 
     def event(self,event):
         if event.type==pygame.QUIT: self.running=False
+        if self.campaign.scene == "shop":
+            mouse=logical_mouse(getattr(event,"pos",pygame.mouse.get_pos()),self.window.get_size())
+            if self.resonance.event(self,event,mouse): return
         if event.type==pygame.KEYDOWN and self.campaign.scene=="battle" and not self.paused:
             if event.key == pygame.K_F6:
                 if self.campaign.stage.get("debug", False) or self.preview:
@@ -319,13 +325,15 @@ class App:
 
     def begin_action(self,kind,source,resolve):
         actor = self.battlefield.actors[source]
+        # Stormcaller's special keeps its authored clip/timing but lands as a normal hit.
+        feedback_kind = "attack" if kind == "special" and source == "opponent" and self.campaign.stage["id"] == 3 else kind
         def impact():
             effects=resolve()
             self.pending_card=None
             damage_and_other = [e for e in effects if not (e.kind == "block" and e.target == "enemy" and source == "opponent" and kind in ("attack", "heavy", "special"))]
             block_after = [e for e in effects if e.kind == "block" and e.target == "enemy" and source == "opponent" and kind in ("attack", "heavy", "special")]
-            self.effects.add(damage_and_other,self.campaign.stage,kind,source)
-            self.battlefield.feedback(effects,source,kind)
+            self.effects.add(damage_and_other,self.campaign.stage,feedback_kind,source)
+            self.battlefield.feedback(effects,source,feedback_kind)
             if block_after and "defend" in actor.clips:
                 actor.next_state = "defend"
                 actor.on_state_change = lambda new_state: self.effects.add(block_after, self.campaign.stage, "defend", source)
@@ -353,6 +361,9 @@ class App:
         return cards
 
     def update(self,dt):
+        if self.campaign.scene == "shop" and not self.paused:
+            self.resonance.update(dt,self.campaign)
+            self.resonance.update_hover(dt,logical_mouse(pygame.mouse.get_pos(),self.window.get_size()))
         if self.preview and not self.paused:
             self.preview.update(dt)
         if not self.paused and not self.preview:
@@ -434,116 +445,7 @@ class App:
         pygame.display.flip()
 
     def draw_shop(self, mouse):
-        c = self.campaign; s = self.canvas; ui = self.ui
-        self.background.draw(s, self.time)
-        self.background.draw(s, self.time, True)
-
-        dim = pygame.Surface((1600, 900), pygame.SRCALPHA)
-        dim.fill((6, 9, 18, 195))
-        s.blit(dim, (0, 0))
-
-        panel_rect = pygame.Rect(150, 45, 1300, 810)
-        ui.panel(s, panel_rect, (15, 20, 36), (60, 75, 110), 20)
-
-        ui.text(s, "THE VEIL BAZAAR", (800, 88), 36, (244, 233, 212), True)
-
-        res = c.last_battle_result
-        if res:
-            banner_rect = pygame.Rect(200, 130, 1200, 44)
-            half_note = "   (Half Reward)" if res.get("half_reward") else ""
-            if res.get("won"):
-                bg_color = (22, 52, 36)
-                border_color = (65, 150, 95)
-                msg = f"STAGE CLEARED: {res['stage_name']}   |   Claimed +{res['earned']} Veil Shards{half_note}"
-                text_color = (165, 245, 190)
-            else:
-                bg_color = (52, 25, 30)
-                border_color = (150, 65, 75)
-                msg = f"DEFEATED: Dealt {res['damage_dealt']}/{res['enemy_max_hp']} damage to {res['enemy_name']}   |   Gained +{res['earned']} Veil Shards{half_note}"
-                text_color = (245, 175, 180)
-            ui.panel(s, banner_rect, bg_color, border_color, 10)
-            ui.text(s, msg, banner_rect.center, 18, text_color, True)
-
-        balance_rect = pygame.Rect(1170, 70, 230, 46)
-        ui.panel(s, balance_rect, (25, 32, 50), (225, 190, 110), 10)
-        ui.text(s, f"Shards: {c.shards}", balance_rect.center, 22, (248, 220, 135), True)
-
-        item_keys = ["hp", "attack", "shield", "heavy", "heal", "energy"]
-        grid_x = 200
-        grid_y = 195
-        card_w = 380
-        card_h = 250
-        gap_x = 30
-        gap_y = 20
-
-        from src.scenes.campaign import SHOP_CATALOG
-        for idx, key in enumerate(item_keys):
-            col = idx % 3
-            row = idx // 3
-            bx = grid_x + col * (card_w + gap_x)
-            by = grid_y + row * (card_h + gap_y)
-            rect = pygame.Rect(bx, by, card_w, card_h)
-
-            cat = SHOP_CATALOG[key]
-            lvl = c.upgrades.get(key, 0)
-            max_lvl = cat["max_level"]
-            cost = c.item_cost(key)
-            can_afford = c.can_buy(key)
-            is_maxed = lvl >= max_lvl
-
-            accent = {
-                "hp": (230, 95, 95),
-                "attack": (238, 132, 90),
-                "shield": (112, 203, 236),
-                "heavy": (198, 145, 232),
-                "heal": (136, 246, 192),
-                "energy": (245, 215, 120),
-            }.get(key, (180, 190, 210))
-
-            ui.panel(s, rect, (20, 27, 46), tuple(int(x * 0.7) for x in accent), 14)
-            pygame.draw.rect(s, accent, (bx + 2, by + 2, card_w - 4, 4), border_top_left_radius=12, border_top_right_radius=12)
-
-            ui.text(s, cat["name"], (bx + 16, by + 18), 20, (244, 233, 212))
-
-            lvl_text = "MAX" if is_maxed else (f"Level {lvl}/{max_lvl}" if max_lvl > 1 else ("Active" if lvl > 0 else "Locked"))
-            lw = ui.font(15).size(lvl_text)[0]
-            ui.text(s, lvl_text, (bx + card_w - 18 - lw, by + 20), 15, accent)
-
-            if key == "hp":
-                cur_val = f"Current Max HP: {c.player_max_hp()}"
-            elif key == "attack":
-                cur_val = f"Current Damage: {6 + lvl * 2}"
-            elif key == "shield":
-                cur_val = f"Current Block: {6 + lvl * 2}"
-            elif key == "heavy":
-                cur_val = f"Current Damage: {10 + lvl * 3}"
-            elif key == "heal":
-                cur_val = f"Current Healing: {6 + lvl * 2}"
-            elif key == "energy":
-                cur_val = "Turn 1 starts with 3 Energy" if lvl > 0 else "Turn 1 starts with 2 Energy"
-
-            ui.text(s, cat["desc"], (bx + 16, by + 60), 16, (200, 210, 225))
-            ui.text(s, cur_val, (bx + 16, by + 90), 15, (148, 160, 188))
-
-            btn_rect = pygame.Rect(bx + 20, by + card_h - 58, card_w - 40, 42)
-            btn_id = f"buy_{key}"
-            if is_maxed:
-                ui.panel(s, btn_rect, (28, 34, 48), (48, 56, 74), 8)
-                ui.text(s, "MAX LEVEL", btn_rect.center, 16, (120, 130, 150), True)
-            else:
-                self.button(btn_id, f"Enhance  ({cost})", btn_rect, mouse, enabled=can_afford, accent=accent)
-
-        if res and res.get("won"):
-            cont_label = "Continue Journey"
-            cont_action = "next"
-        else:
-            cont_label = f"Retry Stage {c.index + 1}"
-            cont_action = "retry"
-
-        if c.index > 0:
-            self.button("retry_prev", f"Retry Stage {c.index}", (380, 761, 210, 42), mouse)
-        self.button(cont_action, cont_label, (630, 755, 340, 54), mouse, accent=c.stage["accent"])
-        self.button("menu", "Main Menu", (1010, 761, 180, 42), mouse)
+        self.resonance.draw(self,mouse)
 
     def draw_battle(self,mouse):
         c=self.campaign; b=c.battle

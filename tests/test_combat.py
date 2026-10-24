@@ -393,7 +393,7 @@ def test_shop_currency_and_progression(campaign):
     cards = c.active_cards()
     attack_card = next(cd for cd in cards if cd.id == 'attack')
     assert attack_card.amount == 8
-    assert attack_card.name == 'Attack+'
+    assert attack_card.name == 'Frost Bolt+'
 
     assert c.buy('energy') is True
     assert c.shards == 40

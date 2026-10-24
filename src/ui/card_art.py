@@ -1,7 +1,8 @@
 """Original procedural fantasy card faces; cached by the hand renderer."""
 import pygame
+from src.ui.resonance_icons import icon_surface, FROST, GLACIAL
 
-COLORS={"attack":(229,128,96),"heavy":(198,145,232),"shield":(111,190,232),"heal":(155,213,117)}
+COLORS={"attack":FROST,"heavy":GLACIAL,"shield":(111,190,232),"heal":(155,213,117)}
 
 def card_face(ui, card, size, affordable=True, highlight=False):
     w,h=size
@@ -21,14 +22,8 @@ def card_face(ui, card, size, affordable=True, highlight=False):
     # Faceted magical illustrations, distinct even within the attack category.
     for i in range(5):
         pygame.draw.circle(s,(*color,25),(cx,cy),48-i*6,1)
-    if card.id=="heavy":
-        for dx,dy in ((-25,9),(0,-8),(25,12)):
-            pygame.draw.polygon(s,color,[(cx+dx,cy+dy-43),(cx+dx+12,cy+dy),(cx+dx-9,cy+dy+34),(cx+dx-15,cy+dy)])
-            pygame.draw.line(s,(247,211,242),(cx+dx,cy+dy-36),(cx+dx-8,cy+dy+15),2)
-    elif card.category=="attack":
-        pygame.draw.polygon(s,color,[(cx+35,cy-46),(cx+18,cy+3),(cx-34,cy+39),(cx-12,cy-3)])
-        pygame.draw.polygon(s,(255,215,146),[(cx+35,cy-46),(cx-5,cy+8),(cx-34,cy+39),(cx+10,cy-19)])
-        pygame.draw.line(s,color,(cx-30,cy-5),(cx+10,cy+33),4)
+    if card.id in ("attack","heavy"):
+        s.blit(icon_surface(card.id,120),(cx-60,cy-60))
     elif card.category=="block":
         pygame.draw.polygon(s,color,[(cx,cy-43),(cx+37,cy-27),(cx+30,cy+14),(cx,cy+43),(cx-30,cy+14),(cx-37,cy-27)])
         pygame.draw.polygon(s,(39,81,125),[(cx,cy-30),(cx+25,cy-19),(cx+20,cy+9),(cx,cy+28),(cx-20,cy+9),(cx-25,cy-19)])
@@ -39,7 +34,10 @@ def card_face(ui, card, size, affordable=True, highlight=False):
             pygame.draw.polygon(s,color,[(cx,cy+dy),(cx+direction*32,cy+dy-32),(cx+direction*28,cy+dy-5)])
         pygame.draw.polygon(s,(213,241,145),[(cx,cy-47),(cx+12,cy-21),(cx,cy-6),(cx-12,cy-21)])
     pygame.draw.line(s,gold,(17,150),(w-17,150))
-    ui.text(s,card.name,(cx,170),19,(244,233,212),True)
+    name_size=19
+    while name_size>12 and ui.font(name_size).size(card.name)[0]>w-22:
+        name_size-=1
+    ui.text(s,card.name,(cx,170),name_size,(244,233,212),True)
     lines=[]; line=""
     for word in card.description.split():
         candidate=(line+" "+word).strip()

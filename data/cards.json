@@ -1,7 +1,7 @@
 [
   {
     "id": "attack",
-    "name": "Attack",
+    "name": "Frost Bolt",
     "cost": 1,
     "category": "attack",
     "amount": 6,
@@ -10,7 +10,7 @@
   },
   {
     "id": "heavy",
-    "name": "Heavy Attack",
+    "name": "Glacial Bolt",
     "cost": 2,
     "category": "attack",
     "amount": 10,
