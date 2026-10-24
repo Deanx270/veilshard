@@ -1,69 +1,141 @@
 # Veilshard — Fractured Oath
 
-A single-player, anime-inspired low-poly 2.5D turn-based card RPG prototype made with Python and Pygame Community Edition. Recover five fragments through Ember Forest, Frozen Ruins, Storm Tower, Corrupted Grove, and Shattered Citadel.
+A single-player, anime-inspired low-poly 2.5D turn-based card RPG prototype built with Python and Pygame Community Edition (`pygame-ce`). Follow the echoes of a shattered world to recover ancient fragments across five regions: Ember Forest, Frozen Ruins, Stormspire, Corrupted Grove, and Shattered Citadel.
 
-## Install and run
+![Veilshard Main Menu](docs/screenshots/main_menu.png)
 
-Python 3.11+ is required (tested with Python 3.12.10).
+---
+
+## Current Progress & Showcase
+
+The project features three completed stages with custom multi-layer parallax environments and fully animated adversaries, a between-stage Shard Resonance upgrade system, a moonlit ice card identity, dynamic combat impact camera effects, and a floating HUD. (Stages 4 and 5 remain functional placeholders pending final artwork).
+
+### Completed Stages
+
+#### Stage 1: Ember Forest
+Fight through the glowing embers of the autumn woods against the ferocious **Fire Imp**.
+- **Parallax Environment**: 5-layer Muse Spark forest with overscan cropping and impact-responsive depth parallax.
+- **Opponent**: Fire Imp with frame-animated attacks, biting lunges, hit reactions, and custom ground shadows.
+
+![Stage 1: Ember Forest](docs/screenshots/stage_01_battle.png)
+
+#### Stage 2: Frozen Ruins
+Scale the glacial mountain fortress to confront the armored **Frostbound Knight**.
+- **Parallax Environment**: 6-layer snowy mountain panorama featuring layered fortress battlements, distant peaks, midground ruins, and rolling mist.
+- **Opponent**: Frostbound Knight (60 HP) armed with heavy sword strikes, reactive shield guard, and devastating Glacial Wrath.
+
+![Stage 2: Frozen Ruins](docs/screenshots/stage_02_battle.png)
+
+#### Stage 3: Stormspire
+Ascend the lightning-charged floating spires and face the arcane master, **Stormcaller**.
+- **Parallax Environment**: 7-layer atmospheric Stormspire with an animated storm vortex, floating citadel islands, ancient ruins, and layered fog.
+- **Opponent**: Stormcaller (100 HP) featuring the **Desperation Vortex** unique passive, multi-projectile Arcane Barrage, defensive Storm Surge (+12/+15 Block with excess block converted to attack power), and catastrophic Thunderfall.
+- **Camera & Presentation**: 4-step screen earthquake shake sequence during Thunderfall and synchronized 13th-frame shield burst activation during defensive charges.
+
+![Stage 3: Stormspire](docs/screenshots/stage_03_battle.png)
+
+*Stormcaller unleashing Thunderfall with full-screen impact shake and directional recoil:*
+![Stage 3: Thunderfall Impact](docs/screenshots/stage_03_thunderfall.png)
+
+---
+
+### Shard Resonance (Upgrade System)
+
+Between battles, players enter **Shard Resonance** to channel earned Veil Shards into permanent character enhancements. This attunement system replaces the previous shop interface with interactive card-based choices and crystal sigil visuals.
+
+![Shard Resonance](docs/screenshots/shard_resonance.png)
+
+- **Dynamic Attunement Selection**: Presents 3 distinct upgrades tailored each visit, prioritizing non-maxed attributes:
+  - **Vital Infusion**: Increases maximum player HP (+5 per tier).
+  - **Frost Focus**: Empowers Frost Bolt damage (+2 per tier).
+  - **Crystal Aegis**: Strengthens Shield block value (+2 per tier).
+  - **Moonshard Surge**: Amplifies Glacial Bolt heavy damage (+3 per tier).
+  - **Lunar Renewal**: Boosts vital card healing (+2 per tier).
+  - **Resonance Conduit**: Grants bonus energy on Turn 1 (+1 energy).
+- **Interactive Upgrade UI**: Interactive selection with hover elevation, diamond tier progression indicators, authoritative current-to-next stat previews (`10 → 13`), and a release-to-confirm Enhance button with cooldown protection and particle glow.
+- **Journey Progression & Retry Flow**: Earn Veil Shards from victory or defeat based on performance. Players can proceed forward upon victory, retry the current stage upon defeat, or return to previously cleared stages for half rewards to reinforce their build.
+
+---
+
+### Moonlit Ice Card Identity
+
+Combat cards carry a cohesive crystalline ice theme with custom procedural icon art and dynamic typography:
+
+- **Frost Bolt** (1 Cost): Fast offensive spell dealing reliable base damage (upgradable via *Frost Focus*).
+- **Glacial Bolt** (2 Cost): Heavy strike triggering amplified camera impact recoil, bold damage popups, and hit-stun (upgradable via *Moonshard Surge*).
+- **Shield** (1 Cost): Barrier granting Block that absorbs incoming damage before HP (upgradable via *Crystal Aegis*).
+- **Heal** (1 Cost): Vital restoration recovering lost health capped at maximum HP (upgradable via *Lunar Renewal*).
+
+Cards are drawn from a 12-card starting deck (3 cards drawn per turn, 2 starting energy) and presented in a shallow 7-degree fan with lift-on-hover, affordability shading, and smooth dissolve animation upon play.
+
+---
+
+## Install and Run
+
+Python 3.11+ is required (tested on Python 3.12).
 
 ```powershell
+# Setup virtual environment
 python -m venv .venv
 .\.venv\Scripts\python -m pip install -r requirements.txt
+
+# Launch playable game
 .\.venv\Scripts\python main.py
+
+# Instant jump to specific stage (e.g. Stage 3 Stormspire)
+.\.venv\Scripts\python main.py --stage 3
 ```
 
-On macOS/Linux, use `.venv/bin/python` in place of `.\.venv\Scripts\python`. No Blender installation, downloaded art, or external font is required. Assets resolve relative to the project, regardless of working directory.
+On macOS/Linux, use `.venv/bin/python` in place of `.\.venv\Scripts\python`. No Blender installation, external fonts, or external runtime services are required. Assets resolve dynamically relative to the project root.
+
+---
 
 ## Controls
 
-- Click **Begin journey**, then **Enter battle**.
-- Hover over cards to highlight them; click a card to play it.
-- Each turn gives 2 energy and 3 cards. Click **End turn** to execute the displayed enemy intent.
-- Press **Escape** in combat to pause/resume. The pause menu can return to the main menu.
-- Retry the current stage after defeat. HP and the starting deck reset for each stage.
-- Resize the window freely; the 1600×900 canvas is letterboxed with corrected mouse coordinates.
+- **Navigate**: Click **Begin journey** from the main menu, then **Enter battle**.
+- **Play Cards**: Hover over cards in your hand to inspect them; left-click an affordable card to play it.
+- **End Turn**: Click the glowing **End Turn** orb (bottom-right) to resolve combat and trigger enemy actions.
+- **Pause**: Press **Escape** during combat to open the pause menu (resume or return to main menu).
+- **Window Scaling**: Freely resize the window or enter full-screen; the 1600×900 logical canvas automatically letterboxes with precision mouse coordinate mapping.
 
-## Implemented
+---
 
-A 12-card deck (5 Attack, 2 Heavy Attack, 3 Shield, 2 Heal), shuffled draw/discard cycle, visible enemy intentions, five enemy patterns, six navigation scenes, health/Block/energy UI, a shallow animated portrait-card fan, transformed hover/click detection, and affordability feedback, floating damage/heal/Block numbers, alpha-preserving sprite hit flashes, camera shake and impact zoom, scene fades, and pause-safe animation timing.
+## Automated Tests
 
-Pure Python combat is separate from rendering. JSON defines cards, stage layouts, enemies, story, and the displayed title. PNG backgrounds, transparent foregrounds, parallax layers, and optional frame sequences are cached at load time. Independent transparent character sprites support ground anchors, scale, draw order, shadows, and optional frame animation clips. Missing art falls back to procedural environments and faceted character stand-ins. Stage 1 has a three-quarter clearing composition; final Blender art remains pending.
-
-## Tests
+The test suite validates pure combat models, animation timing, shard resonance logic, UI integration, and headless rendering:
 
 ```powershell
+# Run the complete test suite (100 tests)
 .\.venv\Scripts\python -m pytest -q
+
+# Run headless 120-frame integration check
 .\.venv\Scripts\python main.py --headless --frames 120
 ```
 
-Tests cover combat invariants, all enemy actions, deck recycling, campaign outcomes, ten seeded full campaign playthroughs, navigation/clicks/pause, resizing math, rendering every scene, and 1920×1080 PNG/frame-sequence imports using SDL dummy drivers.
+---
 
-## Structure
+## Project Structure
 
 ```text
-main.py                 Entry point and headless launch options
-src/core/               Main loop, input coordinate mapping, resources
-src/combat/             Pure battle state, fighters, turn resolution
-src/cards/              Card definitions and deck handling
-src/enemies/            Locked intentions and behavior patterns
-src/scenes/             Campaign navigation and stage progression
-src/rendering/          Cached assets, backgrounds, characters, effects
-src/ui/                 Text, panels, buttons, health bars, cards
-data/                   Editable cards, stages, and story JSON
-assets/                 Replacement art and audio directories
-art_sources/blender/    Reserved for partner source projects
-tests/                  Combat and headless UI integration tests
-docs/                   Game rules and Blender export contract
-AGENTS.md               Contributor and coding-agent guide
-TASK.md                 Original project brief
+main.py                 Entry point, headless mode, and stage jump options (--stage 1-5)
+src/
+├── core/               Main game loop, coordinate mapping, resource paths, App coordinator
+├── combat/             Pure combat state, fighters, damage/block resolution (Pygame-free)
+├── cards/              Card definitions, deck manipulation, and draw/discard cycles
+├── enemies/            Enemy intention AI, multi-phase patterns, and unique passives
+├── scenes/             Campaign state machine, stage progression, and shard calculations
+├── rendering/          Parallax multi-layer backgrounds, character sprites, and camera effects
+└── ui/                 Battle HUD, card hand fan, Shard Resonance interface, and procedural icons
+data/                   JSON definitions for cards, enemies, stages, and campaign story
+assets/                 Multi-layer parallax PNGs and organized enemy sprite frame sequences
+docs/                   Design specifications, Blender pipeline, UI contracts, and screenshots
+tests/                  100 automated unit, timing, and integration test modules
 ```
 
-## Current limitations
+---
 
-Art is intentionally temporary: faceted stand-ins and procedural scenery, no final low-poly Blender renders. No sound, save system, rewards, deck upgrades, dialogue trees, or skeletal animation. Played cards move, shrink, and dissolve while the hand reorganizes. Player and enemy actions resolve once at timed impact after anticipation, followed by recovery. Heavy strikes use stronger recoil, particles, and shake. HP bars interpolate after the real HP change. Balance is provisional, and playthrough tests do not guarantee every random draw is winnable. PNG sequences preload all frames and should stay small. The world composite is scaled during camera effects and the logical canvas for window presentation; source assets are cached at load time.
+## Current Roadmap & Limitations
 
-See [visual direction](docs/visual_direction.md), [game rules](docs/game_design.md) and the [Blender pipeline](docs/blender_pipeline.md) before replacing assets.
-
-The battle HUD floats above the full viewport: compact player status bottom-left, enemy health/intent near the sprite, and a circular End Turn bottom-right. Three cards use a restrained 7-degree fan with a 14-pixel arc. See [battle UI](docs/battle_ui.md) for tuning and input behavior.
-
-Stage 1 now uses the supplied five-layer Muse Spark environment with a centered overscan crop and impact-driven parallax. Press F1 in Stage 1 to access temporary camera controls; see [Stage 1 parallax](docs/stage1_parallax.md). Stages 2–5 retain their existing backgrounds.
+- **Stages 1–3 Complete**: Environments, parallax manifests, and animated opponents are fully optimized and integrated.
+- **Stages 4 & 5 Placeholders**: Corrupted Grove and Shattered Citadel currently utilize placeholder backdrops and prototype enemy archetypes.
+- **Upcoming Polish**: Audio integration (BGM & SFX), save system, expanded card variety, and final Blender exports for later stages.
