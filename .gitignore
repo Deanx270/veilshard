@@ -12,3 +12,4 @@ Thumbs.db
 
 animation-preview.json
 .pytest_tmp/
+*.zip

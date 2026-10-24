@@ -1,0 +1,39 @@
+========================================================================
+                      VEILSHARD - FRACTURED OATH
+========================================================================
+
+QUICK START (RECOMMENDED FOR WINDOWS):
+------------------------------------------------------------------------
+Simply double-click:
+    Play_Veilshard.bat
+
+This script will automatically detect Python, install the single required
+library (pygame-ce) if it is not already present, and launch the game.
+
+
+MANUAL START (IF PREFERRED OR ON MACOS / LINUX):
+------------------------------------------------------------------------
+Requirements: Python 3.11 or newer.
+
+1. Install dependencies:
+   pip install -r requirements.txt
+
+2. Run the game:
+   python main.py
+
+(Optional: Jump directly to Stage 3 for testing):
+   python main.py --stage 3
+
+
+CONTROLS:
+------------------------------------------------------------------------
+- Left Click:
+    - Click "Begin journey" then "Enter battle".
+    - Hover over cards to inspect them; click an affordable card to play it.
+    - Click "End Turn" (bottom-right) to finish your turn and trigger the enemy.
+    - Click choices in "Shard Resonance" between battles to upgrade stats.
+- Escape (ESC):
+    - Pause/resume combat or return to the main menu.
+- Window:
+    - The game runs at 1600x900 resolution and can be freely resized or maximized.
+========================================================================
