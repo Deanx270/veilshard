@@ -82,7 +82,7 @@ def test_stage_one_clips_and_logged_placement(app):
     actor.trigger("idle")
     actor.update(1.5)
     assert actor.state == "idle" and actor.frame() is actor.clips["idle"][0][1]
-    for kind, damage in (("attack", 6), ("heavy", 10)):
+    for kind, damage in (("attack", 6), ("heavy", 11)):
         b = app.campaign.battle
         b.energy = 2
         b.deck.hand = [next(c for c in app.campaign.cards if c.id == kind)]

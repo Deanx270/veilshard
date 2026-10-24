@@ -80,12 +80,12 @@ def test_cancelled_press_and_value_previews(screen):
 def test_ice_identity_preserves_ids_and_scaling(screen):
     from src.ui.resonance_icons import icon_surface
     view,app=screen; c=app.campaign
-    expected={"attack":("Frost Bolt",1,6),"heavy":("Glacial Bolt",2,10),"shield":("Shield",1,6),"heal":("Heal",1,6)}
+    expected={"attack":("Frost Bolt",1,6),"heavy":("Glacial Bolt",2,11),"shield":("Shield",1,6),"heal":("Heal",1,6)}
     for card in c.cards:
         assert (card.name,card.cost,card.amount)==expected[card.id]
     assert [SHOP_CATALOG[k]["name"] for k in ("hp","attack","shield","heavy","heal","energy")]==["Vital Infusion","Frost Focus","Crystal Aegis","Moonshard Surge","Lunar Renewal","Resonance Conduit"]
     c.upgrades["attack"]=2;c.upgrades["heavy"]=2
     cards={card.id:card for card in c.active_cards()}
-    assert cards["attack"].amount==10 and cards["heavy"].amount==16
+    assert cards["attack"].amount==10 and cards["heavy"].amount==22
     assert icon_surface("attack") is icon_surface("attack")
     assert pygame.image.tobytes(icon_surface("attack"),"RGBA")!=pygame.image.tobytes(icon_surface("heavy"),"RGBA")

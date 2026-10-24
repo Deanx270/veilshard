@@ -25,7 +25,7 @@ def set_card(app,kind):
     app.hand.sync(b.deck.hand)
     return b
 
-@pytest.mark.parametrize("kind,damage,cost",[("attack",6,1),("heavy",10,2)])
+@pytest.mark.parametrize("kind,damage,cost",[("attack",6,1),("heavy",11,2)])
 def test_rapid_card_clicks_resolve_once_at_impact(app,kind,damage,cost):
     b=set_card(app,kind); hp=b.enemy.hp
     click_card(app)

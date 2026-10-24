@@ -10,8 +10,8 @@ MUTED=(180,185,205)
 
 ACCENTS = {"hp":(241,133,161), "attack":FROST, "shield":(127,195,246),
            "heavy":GLACIAL, "heal":(129,221,173), "energy":(238,206,125)}
-SUMMARY = {"hp":"+5 maximum health", "attack":"+2 Frost Bolt damage", "shield":"+2 Shield Block",
-           "heavy":"+3 Glacial Bolt damage", "heal":"+2 healing", "energy":"+1 energy on the first turn"}
+SUMMARY = {"hp":"+5 maximum health", "attack":"+2 Magic · both ice spells", "shield":"+2 Shield Block",
+           "heavy":"Amplify Glacial Bolt", "heal":"+2 healing", "energy":"+1 energy on the first turn"}
 
 
 def diamond(surface, color, center, radius, width=0):
@@ -88,8 +88,11 @@ class ShardResonance:
     def values(self,c,key):
         if key=="hp": return c.player_max_hp(),5
         if key=="energy": return 2+c.upgrades[key],1
+        if key=="heavy":
+            current=c.glacial_damage()
+            return current,c.glacial_damage(c.upgrades[key]+1)-current
         card=next(card for card in c.active_cards() if card.id==key)
-        return card.amount,3 if key=="heavy" else 2
+        return card.amount,2
 
     def icon(self,s,key,center,color):
         diamond(s,tuple(int(v*.18) for v in color),center,49)
@@ -135,7 +138,12 @@ class ShardResonance:
             current,step=self.values(c,key)
             preview=f"{current}  →  {current+step}" if not maxed else str(current)
             ui.text(s,preview,(x,y+226),36,color,True)
-            ui.text(s,"CURRENT  →  NEXT" if not maxed else "FULLY ATTUNED",(x,y+259),13,MUTED,True)
+            detail="CURRENT  →  NEXT" if not maxed else "FULLY ATTUNED"
+            if key=="heavy":
+                multiplier=lambda n: f"{c.glacial_multiplier(n):.2f}".rstrip("0").rstrip(".")
+                detail=f"{multiplier(level)}× Magic" if maxed else f"{multiplier(level)}× → {multiplier(level+1)}× Magic"
+            elif key=="attack": detail="MAGIC · FROST BOLT DAMAGE"
+            ui.text(s,detail,(x,y+259),15,MUTED,True)
             for j in range(maximum):
                 diamond(s,color if j<level else (117,119,148),(x+(j-(maximum-1)/2)*23,y+292),6,0 if j<level else 1)
             ui.text(s,f"Level {level} / {maximum}",(x,y+318),16,(199,196,215),True)

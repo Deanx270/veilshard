@@ -2,6 +2,8 @@ from src.cards.models import Card
 from src.combat.battle import Battle
 from src.core.resources import read_data
 
+GLACIAL_PERCENT = (180, 200, 220, 235, 250)
+
 SHOP_CATALOG = {
     "hp": {
         "name": "Vital Infusion",
@@ -12,7 +14,7 @@ SHOP_CATALOG = {
     },
     "attack": {
         "name": "Frost Focus",
-        "desc": "Frost Bolt deals +2 damage",
+        "desc": "+2 Magic for both ice spells",
         "base_cost": 45,
         "cost_inc": 20,
         "max_level": 5,
@@ -26,7 +28,7 @@ SHOP_CATALOG = {
     },
     "heavy": {
         "name": "Moonshard Surge",
-        "desc": "Glacial Bolt deals +3 damage",
+        "desc": "Increase Glacial Bolt Magic multiplier",
         "base_cost": 55,
         "cost_inc": 25,
         "max_level": 4,
@@ -73,22 +75,34 @@ class Campaign:
         self.last_battle_result = None
         self.scene = "intro"
 
+    def player_magic(self) -> int:
+        """Shared ice-spell power, derived from editable base Frost Bolt damage."""
+        base = next(card.amount for card in self.cards if card.id == "attack")
+        return base + self.upgrades.get("attack", 0) * 2
+
+    def glacial_multiplier(self, level: int | None = None) -> float:
+        level = self.upgrades.get("heavy", 0) if level is None else level
+        return GLACIAL_PERCENT[max(0, min(level, len(GLACIAL_PERCENT) - 1))] / 100
+
+    def glacial_damage(self, level: int | None = None) -> int:
+        level = self.upgrades.get("heavy", 0) if level is None else level
+        percent = GLACIAL_PERCENT[max(0, min(level, len(GLACIAL_PERCENT) - 1))]
+        # Nearest whole damage; exact halves round up, without float drift.
+        return (self.player_magic() * percent + 50) // 100
+
     def active_cards(self) -> list[Card]:
         upgraded = []
         for c in self.cards:
-            bonus = 0
-            if c.id == "attack": bonus = self.upgrades.get("attack", 0) * 2
-            elif c.id == "shield": bonus = self.upgrades.get("shield", 0) * 2
-            elif c.id == "heavy": bonus = self.upgrades.get("heavy", 0) * 3
-            elif c.id == "heal": bonus = self.upgrades.get("heal", 0) * 2
-            amount = c.amount + bonus
+            level = self.upgrades.get(c.id, 0)
+            if c.id == "attack": amount = self.player_magic()
+            elif c.id == "heavy": amount = self.glacial_damage()
+            elif c.id in ("shield", "heal"): amount = c.amount + level * 2
+            else: amount = c.amount
             desc = c.description
-            if bonus > 0:
-                if c.category == "attack": desc = f"Deal {amount} damage."
-                elif c.category == "block": desc = f"Gain {amount} Block."
-                elif c.category == "heal": desc = f"Recover up to {amount} HP."
-            plus = ("+" * (bonus // 2 if c.id != "heavy" else bonus // 3)) if bonus > 0 else ""
-            upgraded.append(Card(c.id, c.name + plus, c.cost, c.category, amount, desc, c.count))
+            if c.category == "attack": desc = f"Deal {amount} damage."
+            elif c.category == "block": desc = f"Gain {amount} Block."
+            elif c.category == "heal": desc = f"Recover up to {amount} HP."
+            upgraded.append(Card(c.id, c.name + "+" * level, c.cost, c.category, amount, desc, c.count))
         return upgraded
 
     def player_max_hp(self) -> int:

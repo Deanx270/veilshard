@@ -43,12 +43,12 @@ Between battles, players enter **Shard Resonance** to channel earned Veil Shards
 
 - **Dynamic Attunement Selection**: Presents 3 distinct upgrades tailored each visit, prioritizing non-maxed attributes:
   - **Vital Infusion**: Increases maximum player HP (+5 per tier).
-  - **Frost Focus**: Empowers Frost Bolt damage (+2 per tier).
+  - **Frost Focus**: Increases the shared Magic attribute (+2 per tier), strengthening both Frost Bolt and Glacial Bolt.
   - **Crystal Aegis**: Strengthens Shield block value (+2 per tier).
-  - **Moonshard Surge**: Amplifies Glacial Bolt heavy damage (+3 per tier).
+  - **Moonshard Surge**: Raises Glacial Bolt’s Magic multiplier: **1.8× / 2.0× / 2.2× / 2.35× / 2.5×** at levels 0–4.
   - **Lunar Renewal**: Boosts vital card healing (+2 per tier).
   - **Resonance Conduit**: Grants bonus energy on Turn 1 (+1 energy).
-- **Interactive Upgrade UI**: Interactive selection with hover elevation, diamond tier progression indicators, authoritative current-to-next stat previews (`10 → 13`), and a release-to-confirm Enhance button with cooldown protection and particle glow.
+- **Interactive Upgrade UI**: Interactive selection with hover elevation, diamond tier progression indicators, authoritative current-to-next stat previews (damage and Magic multiplier), and a release-to-confirm Enhance button with cooldown protection and particle glow.
 - **Journey Progression & Retry Flow**: Earn Veil Shards from victory or defeat based on performance. Players can proceed forward upon victory, retry the current stage upon defeat, or return to previously cleared stages for half rewards to reinforce their build.
 
 ---
@@ -57,10 +57,12 @@ Between battles, players enter **Shard Resonance** to channel earned Veil Shards
 
 Combat cards carry a cohesive crystalline ice theme with custom procedural icon art and dynamic typography:
 
-- **Frost Bolt** (1 Cost): Fast offensive spell dealing reliable base damage (upgradable via *Frost Focus*).
-- **Glacial Bolt** (2 Cost): Heavy strike triggering amplified camera impact recoil, bold damage popups, and hit-stun (upgradable via *Moonshard Surge*).
+- **Frost Bolt** (1 Cost): Deals damage equal to Magic: starts at 6, reaches 16 with max *Frost Focus*.
+- **Glacial Bolt** (2 Cost): Deals Magic × the *Moonshard Surge* multiplier, rounded to the nearest integer (halves up). Starts at 11 damage (6 × 1.8), reaching 40 with both offensive upgrades maxed (16 × 2.5). Existing heavy impact effects and animation timing are preserved.
 - **Shield** (1 Cost): Barrier granting Block that absorbs incoming damage before HP (upgradable via *Crystal Aegis*).
 - **Heal** (1 Cost): Vital restoration recovering lost health capped at maximum HP (upgradable via *Lunar Renewal*).
+
+At level 0, Glacial Bolt costs two energy for less damage than two Frost Bolts; its multiplier reaches parity at level 1 and exceeds it at later levels. Both offensive upgrades work together; shard costs and level caps are unchanged.
 
 Cards are drawn from a 12-card starting deck (3 cards drawn per turn, 2 starting energy) and presented in a shallow 7-degree fan with lift-on-hover, affordability shading, and smooth dissolve animation upon play.
 
@@ -101,7 +103,7 @@ On macOS/Linux, use `.venv/bin/python` in place of `.\.venv\Scripts\python`. No 
 The test suite validates pure combat models, animation timing, shard resonance logic, UI integration, and headless rendering:
 
 ```powershell
-# Run the complete test suite (100 tests)
+# Run the complete test suite
 .\.venv\Scripts\python -m pytest -q
 
 # Run headless 120-frame integration check
@@ -125,7 +127,7 @@ src/
 data/                   JSON definitions for cards, enemies, stages, and campaign story
 assets/                 Multi-layer parallax PNGs and organized enemy sprite frame sequences
 docs/                   Design specifications, Blender pipeline, UI contracts, and screenshots
-tests/                  100 automated unit, timing, and integration test modules
+tests/                  Automated unit, timing, and integration tests
 ```
 
 ---

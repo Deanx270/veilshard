@@ -13,7 +13,7 @@ def campaign():
 def give(c,*ids):
     c.battle.deck.hand=[next(card for card in c.cards if card.id==i) for i in ids]
 
-@pytest.mark.parametrize("card,cost,damage",[("attack",1,6),("heavy",2,10)])
+@pytest.mark.parametrize("card,cost,damage",[("attack",1,6),("heavy",2,11)])
 def test_damage_energy(campaign,card,cost,damage):
     b=campaign.battle; give(campaign,card)
     hp=b.enemy.hp
