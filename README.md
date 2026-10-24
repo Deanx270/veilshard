@@ -2,10 +2,6 @@
 
 A single-player, anime-inspired low-poly 2.5D turn-based card RPG prototype built with Python and Pygame Community Edition (`pygame-ce`). Follow the echoes of a shattered world to recover ancient fragments across five regions: Ember Forest, Frozen Ruins, Stormspire, Corrupted Grove, and Shattered Citadel.
 
-![Veilshard Main Menu](docs/screenshots/main_menu.png)
-
----
-
 ## Current Progress & Showcase
 
 The project features three completed stages with custom multi-layer parallax environments and fully animated adversaries, a between-stage Shard Resonance upgrade system, a moonlit ice card identity, dynamic combat impact camera effects, and a floating HUD. (Stages 4 and 5 remain functional placeholders pending final artwork).
@@ -14,7 +10,7 @@ The project features three completed stages with custom multi-layer parallax env
 
 #### Stage 1: Ember Forest
 Fight through the glowing embers of the autumn woods against the ferocious **Fire Imp**.
-- **Parallax Environment**: 5-layer Muse Spark forest with overscan cropping and impact-responsive depth parallax.
+- **Parallax Environment**: 5-layer autumn forest with overscan cropping and impact-responsive depth parallax.
 - **Opponent**: Fire Imp with frame-animated attacks, biting lunges, hit reactions, and custom ground shadows.
 
 ![Stage 1: Ember Forest](docs/screenshots/stage_01_battle.png)
